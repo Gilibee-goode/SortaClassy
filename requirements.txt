@@ -1,0 +1,4 @@
+pandas==2.1.0
+numpy==1.24.3
+pytest==7.4.0
+python-constraint==1.4.0 

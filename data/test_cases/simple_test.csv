@@ -1,0 +1,16 @@
+student_id,name,behavior_rank,preferred_friend_1,preferred_friend_2,special_needs
+1,Alice Smith,A,2,3,no
+2,Bob Johnson,B,1,4,no
+3,Charlie Brown,C,1,2,no
+4,Diana Prince,A,3,1,no
+5,Eve Wilson,B,4,2,no
+6,Frank Miller,C,5,1,no
+7,Grace Lee,A,6,5,no
+8,Henry Davis,B,7,6,no
+9,Ivy Chen,C,8,7,no
+10,Jack Wilson,A,9,8,no
+11,Karen Smith,B,10,9,no
+12,Liam Brown,C,11,10,no
+13,Mia Johnson,A,12,11,no
+14,Noah Davis,B,13,12,no
+15,Olivia Wilson,C,14,13,no 
