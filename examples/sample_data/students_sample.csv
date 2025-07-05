@@ -1,0 +1,9 @@
+student_id,first_name,last_name,gender,class,academic_score,behavior_rank,assistance_package,preferred_friend_1,preferred_friend_2,preferred_friend_3,disliked_peer_1,disliked_peer_2,disliked_peer_3,disliked_peer_4,disliked_peer_5,force_class,force_friend
+317328593,John,Smith,M,1,85.5,B,false,203765489,,,456789123,,,,,
+203765489,Sarah,Johnson,F,1,92.0,A,false,317328593,,,891234567,,,,,,"203765489,213568467"
+213568467,Ahmed,Ali,M,1,78.3,C,true,456789123,,,317328593,,,,,,"203765489,213568467"
+456789123,Maria,Garcia,F,2,88.7,B,false,203765489,,,891234567,,,,,
+891234567,David,Brown,M,3,91.2,A,false,317328593,,,456789123,,,,,
+234567890,Emma,Wilson,F,3,82.4,B,true,891234567,,,317328593,,,,,
+345678901,Michael,Davis,M,2,76.8,C,false,234567890,,,203765489,,,,,
+678901234,Lisa,Taylor,F,2,89.1,A,false,345678901,,,891234567,,,,, 
