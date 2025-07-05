@@ -1,0 +1,119 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Meshachvetz Project - Cursor Rules
+
+## MANDATORY: Read Documentation First
+Before implementing ANY code or making changes, you MUST:
+
+1. **Read ALL documentation files** in the `docs/` directory:
+   - `docs/01_project_overview.md` - Understanding project goals and architecture
+   - `docs/02_data_format_specification.md` - CSV format, validation rules, and constraints
+   - `docs/03_scorer_design.md` - Three-layer scoring system design
+   - `docs/04_optimizer_design.md` - Optimization algorithms and strategies
+   - `docs/05_implementation_plan.md` - Development roadmap and milestones
+   - `docs/06_technical_specifications.md` - APIs, data structures, and algorithms
+   - `docs/README.md` - Documentation navigation guide
+
+2. **Follow the Implementation Plan** (`docs/05_implementation_plan.md`):
+   - Respect the phase-based approach (Phase 1: Scorer → Phase 2: Optimizer → Phase 3: Advanced → Phase 4: Extensions)
+   - Check current week and deliverables before implementing
+   - Use the project structure defined in the plan
+   - Follow the technical milestones and acceptance criteria
+
+## Project-Specific Rules
+
+### Data Format Compliance
+- **Student ID**: Must be exactly 9 digits
+- **Behavior Rank**: String format A-E (A=Excellent, B=Good, C=Medium, D=Below Average, E=Poor)
+- **Social Preferences**: 3 optional preferred friend columns + 5 optional disliked peer columns
+- **Force Constraints**: `force_class` and `force_friend` must be handled properly
+- **All input validation** must follow `docs/02_data_format_specification.md`
+
+### Three-Layer Scoring System
+Always implement according to `docs/03_scorer_design.md`:
+1. **Student Layer**: Individual satisfaction (friend placement, conflict avoidance)
+2. **Class Layer**: Intra-class balance (gender balance only)
+3. **School Layer**: Inter-class balance (academic, behavior, size, assistance distribution)
+
+### Architecture Requirements
+- Follow the exact project structure from `docs/05_implementation_plan.md`
+- Use the APIs defined in `docs/06_technical_specifications.md`
+- Implement data models exactly as specified
+- Handle force constraints in all optimization algorithms
+
+### Code Quality Standards
+- Python 3.8+ compatibility
+- Use pandas, numpy for data processing
+- PyYAML for configuration
+- Add type hints following the technical specifications
+- Comprehensive error handling
+- 90%+ test coverage requirement
+
+### Implementation Priorities
+1. **Phase 1 (Weeks 1-3)**: Complete scorer implementation FIRST
+2. **Phase 2 (Weeks 4-6)**: Add optimizer after scorer is complete
+3. **Never skip phases** or implement features out of order
+4. **Test thoroughly** at each milestone before proceeding
+
+### Configuration-Driven Development
+- All weights and parameters must be configurable via YAML
+- Use the configuration system design from `docs/03_scorer_design.md`
+- Default values must match the documentation
+
+### Output Requirements
+- Generate CSV reports exactly as specified in data format docs
+- Include percentage-based metrics for student satisfaction
+- Follow file naming conventions: `results_YYYY-MM-DD_HH-MM-SS/`
+
+## Documentation Maintenance and Progress Tracking
+
+### Update Documentation as You Go
+- **Update Implementation Plan**: Mark completed tasks with ✅ in `docs/05_implementation_plan.md`
+- **Document Changes**: If implementation reveals necessary changes to design, update relevant docs immediately
+- **Add Examples**: Include working code examples in technical specifications when implementing APIs
+- **Update README**: Keep `docs/README.md` current with actual project status
+- **Version Control**: Commit documentation updates alongside code changes
+
+### Progress Tracking Requirements
+- **Phase Completion**: Clearly mark when each phase milestone is achieved
+- **Deliverables**: Update deliverable status in implementation plan
+- **Testing Status**: Document test coverage and validation completion
+- **Performance Metrics**: Record actual performance against targets in technical specs
+- **Issues Found**: Document any deviations from original design and rationale for changes
+
+### When to Update Documentation
+1. **Before starting new phase**: Review and update plan for upcoming work
+2. **After completing milestones**: Mark achievements and lessons learned
+3. **When design changes**: Immediately update affected documentation
+4. **After testing**: Document actual vs. expected performance
+5. **At feature completion**: Update examples and usage documentation
+
+## Validation Checklist
+Before committing any code, verify:
+- [ ] Read and understood relevant documentation
+- [ ] Follows current implementation phase requirements
+- [ ] Data format compliance maintained
+- [ ] Force constraints properly handled
+- [ ] Three-layer scoring system correctly implemented
+- [ ] Configuration system used appropriately
+- [ ] Comprehensive error handling included
+- [ ] Tests written and passing
+
+## Communication Style
+- Reference specific documentation sections when explaining decisions
+- Cite the implementation plan phase when justifying approach
+- Explain how the code aligns with the three-layer architecture
+- Always mention which milestone/deliverable the work contributes to
+
+## Forbidden Actions
+- ❌ Do NOT implement optimizer before scorer is complete
+- ❌ Do NOT skip data validation requirements
+- ❌ Do NOT hardcode values that should be configurable
+- ❌ Do NOT ignore force constraint handling
+- ❌ Do NOT deviate from the specified data format
+- ❌ Do NOT implement features not in the current phase
+
+Remember: This is a structured, phase-based implementation. Always start with documentation, follow the plan, and build incrementally according to the milestones. 
