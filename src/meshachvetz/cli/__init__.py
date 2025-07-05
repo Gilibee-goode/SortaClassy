@@ -1,6 +1,16 @@
 """
-Command-line interface for Meshachvetz.
+Command-line interface for Meshachvetz - Student Class Assignment Optimizer.
+
+This package provides CLI tools for:
+- Scoring student assignments
+- Validating student data
+- Configuration management
 """
 
-# CLI will be implemented after the core scorer is complete
-# Phase 1, Week 3: Scorer Integration and Testing 
+from .main import main as main_cli
+from .scorer_cli import main as scorer_cli
+
+__all__ = [
+    "main_cli",
+    "scorer_cli"
+] 

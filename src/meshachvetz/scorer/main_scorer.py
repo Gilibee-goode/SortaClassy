@@ -5,6 +5,9 @@ and calculates the final weighted score.
 
 from typing import Dict, List, Optional, Any
 import logging
+import os
+import csv
+from datetime import datetime
 from dataclasses import dataclass
 from ..data.models import SchoolData
 from ..data.loader import DataLoader
@@ -29,6 +32,7 @@ class ScoringResult:
     layer_weights: Dict[str, float]
     total_students: int
     total_classes: int
+    school_data: Optional[SchoolData] = None  # Add reference to original school data
     
 
 class Scorer:
@@ -137,7 +141,8 @@ class Scorer:
             school_scores=school_scores,
             layer_weights=layer_weights,
             total_students=school_data.total_students,
-            total_classes=school_data.total_classes
+            total_classes=school_data.total_classes,
+            school_data=school_data  # Store reference to school data
         )
     
     def _calculate_final_score(self, student_score: float, class_score: float, school_score: float) -> float:
@@ -273,3 +278,295 @@ class Scorer:
             'total_friends_placed': sum(s['friend_satisfaction']['friends_placed'] 
                                       for s in result.student_scores.values())
         } 
+
+    def generate_csv_reports(self, result: ScoringResult, output_dir: str = None) -> str:
+        """
+        Generate comprehensive CSV reports for the scoring results.
+        
+        Args:
+            result: ScoringResult object containing all scoring data
+            output_dir: Directory to save reports. If None, creates timestamp-based directory
+            
+        Returns:
+            Path to the output directory containing all reports
+        """
+        # Create output directory with timestamp if not provided
+        if output_dir is None:
+            timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            output_dir = f"results_{timestamp}"
+        
+        # Create directory if it doesn't exist
+        os.makedirs(output_dir, exist_ok=True)
+        
+        self.logger.info(f"Generating CSV reports in directory: {output_dir}")
+        
+        # Generate individual reports
+        self._generate_summary_report(result, output_dir)
+        self._generate_student_report(result, output_dir)
+        self._generate_class_report(result, output_dir)
+        self._generate_school_report(result, output_dir)
+        
+        # Generate configuration report
+        self._generate_config_report(output_dir)
+        
+        self.logger.info(f"CSV reports generated successfully in: {output_dir}")
+        return output_dir
+    
+    def _generate_summary_report(self, result: ScoringResult, output_dir: str) -> None:
+        """Generate overall summary report."""
+        summary_file = os.path.join(output_dir, "summary_report.csv")
+        
+        satisfaction_summary = self.get_student_satisfaction_summary(result)
+        
+        with open(summary_file, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            
+            # Header
+            writer.writerow(["Meshachvetz Scoring Summary Report"])
+            writer.writerow(["Generated:", datetime.now().strftime("%Y-%m-%d %H:%M:%S")])
+            writer.writerow([])
+            
+            # Overall metrics
+            writer.writerow(["Overall Metrics"])
+            writer.writerow(["Metric", "Value"])
+            writer.writerow(["Final Score", f"{result.final_score:.2f}/100"])
+            writer.writerow(["Total Students", result.total_students])
+            writer.writerow(["Total Classes", result.total_classes])
+            writer.writerow([])
+            
+            # Layer scores
+            writer.writerow(["Layer Scores"])
+            writer.writerow(["Layer", "Score", "Weight", "Weighted Contribution"])
+            writer.writerow(["Student Layer", f"{result.student_layer_score:.2f}/100", 
+                           result.layer_weights['student'], 
+                           f"{result.student_layer_score * result.layer_weights['student']:.2f}"])
+            writer.writerow(["Class Layer", f"{result.class_layer_score:.2f}/100", 
+                           result.layer_weights['class'],
+                           f"{result.class_layer_score * result.layer_weights['class']:.2f}"])
+            writer.writerow(["School Layer", f"{result.school_layer_score:.2f}/100", 
+                           result.layer_weights['school'],
+                           f"{result.school_layer_score * result.layer_weights['school']:.2f}"])
+            writer.writerow([])
+            
+            # Student satisfaction statistics
+            writer.writerow(["Student Satisfaction Statistics"])
+            writer.writerow(["Metric", "Count", "Percentage"])
+            writer.writerow(["Highly Satisfied (≥75)", satisfaction_summary['highly_satisfied_count'],
+                           f"{satisfaction_summary['highly_satisfied_count']/result.total_students*100:.1f}%"])
+            writer.writerow(["Moderately Satisfied (50-74)", satisfaction_summary['moderately_satisfied_count'],
+                           f"{satisfaction_summary['moderately_satisfied_count']/result.total_students*100:.1f}%"])
+            writer.writerow(["Low Satisfaction (<50)", satisfaction_summary['low_satisfaction_count'],
+                           f"{satisfaction_summary['low_satisfaction_count']/result.total_students*100:.1f}%"])
+            writer.writerow(["Perfect Satisfaction (≥95)", satisfaction_summary['perfect_satisfaction_count'],
+                           f"{satisfaction_summary['perfect_satisfaction_count']/result.total_students*100:.1f}%"])
+            writer.writerow([])
+            
+            # Social metrics
+            writer.writerow(["Social Metrics"])
+            writer.writerow(["Metric", "Count", "Percentage"])
+            writer.writerow(["Students with Friends Placed", satisfaction_summary['students_with_friends_placed'],
+                           f"{satisfaction_summary['students_with_friends_placed']/result.total_students*100:.1f}%"])
+            writer.writerow(["Students with Conflicts", satisfaction_summary['students_with_conflicts'],
+                           f"{satisfaction_summary['students_with_conflicts']/result.total_students*100:.1f}%"])
+            writer.writerow(["Total Friend Requests", satisfaction_summary['total_friend_requests'], ""])
+            writer.writerow(["Total Friends Placed", satisfaction_summary['total_friends_placed'], ""])
+            writer.writerow(["Friend Placement Rate", "",
+                           f"{satisfaction_summary['total_friends_placed']/satisfaction_summary['total_friend_requests']*100:.1f}%" 
+                           if satisfaction_summary['total_friend_requests'] > 0 else "N/A"])
+    
+    def _generate_student_report(self, result: ScoringResult, output_dir: str) -> None:
+        """Generate detailed student-by-student report."""
+        student_file = os.path.join(output_dir, "student_details.csv")
+        
+        with open(student_file, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            
+            # Header
+            writer.writerow(["Student ID", "Overall Score", "Friend Satisfaction", "Conflict Avoidance",
+                           "Friends Requested", "Friends Placed", "Missing Friends", 
+                           "Dislikes Total", "Conflicts Present", "Class ID", "First Name", "Last Name", 
+                           "Gender", "Academic Score", "Behavior Rank", "Assistance Package"])
+            
+            # Student data
+            for student_id, student_result in result.student_scores.items():
+                friend_sat = student_result['friend_satisfaction']
+                conflict_av = student_result['conflict_avoidance']
+                
+                # Get student information from school data
+                student_class = "Unknown"
+                first_name = "Unknown"
+                last_name = "Unknown"
+                gender = "Unknown"
+                academic_score = "Unknown"
+                behavior_rank = "Unknown"
+                assistance_package = "Unknown"
+                
+                if result.school_data:
+                    try:
+                        student = result.school_data.get_student_by_id(student_id)
+                        student_class = student.class_id
+                        first_name = student.first_name
+                        last_name = student.last_name
+                        gender = student.gender
+                        academic_score = student.academic_score
+                        behavior_rank = student.behavior_rank
+                        assistance_package = "Yes" if student.assistance_package else "No"
+                    except:
+                        pass
+                
+                writer.writerow([
+                    student_id,
+                    f"{student_result['score']:.2f}",
+                    f"{friend_sat['score']:.2f}",
+                    f"{conflict_av['score']:.2f}",
+                    friend_sat['friends_requested'],
+                    friend_sat['friends_placed'],
+                    "|".join(friend_sat['missing_friends']),
+                    conflict_av['dislikes_total'],
+                    "|".join(conflict_av['conflicts_present']),
+                    student_class,
+                    first_name,
+                    last_name,
+                    gender,
+                    academic_score,
+                    behavior_rank,
+                    assistance_package
+                ])
+    
+    def _generate_class_report(self, result: ScoringResult, output_dir: str) -> None:
+        """Generate detailed class-by-class report."""
+        class_file = os.path.join(output_dir, "class_details.csv")
+        
+        with open(class_file, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            
+            # Header
+            writer.writerow(["Class ID", "Overall Score", "Gender Balance Score", "Male Count", "Female Count",
+                           "Male Percentage", "Female Percentage", "Balance Difference"])
+            
+            # Class data
+            for class_id, class_result in result.class_scores.items():
+                gender_balance = class_result['gender_balance']
+                total_students = gender_balance['male_count'] + gender_balance['female_count']
+                
+                male_percentage = (gender_balance['male_count'] / total_students * 100) if total_students > 0 else 0
+                female_percentage = (gender_balance['female_count'] / total_students * 100) if total_students > 0 else 0
+                
+                writer.writerow([
+                    class_id,
+                    f"{class_result['score']:.2f}",
+                    f"{gender_balance['score']:.2f}",
+                    gender_balance['male_count'],
+                    gender_balance['female_count'],
+                    f"{male_percentage:.1f}%",
+                    f"{female_percentage:.1f}%",
+                    f"{gender_balance['balance_difference']:.3f}"
+                ])
+    
+    def _generate_school_report(self, result: ScoringResult, output_dir: str) -> None:
+        """Generate detailed school-level balance report."""
+        school_file = os.path.join(output_dir, "school_balance.csv")
+        
+        school_scores = result.school_scores
+        
+        with open(school_file, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            
+            # Header
+            writer.writerow(["Balance Metric", "Score", "Standard Deviation", "Mean", "Min Value", "Max Value", "Range"])
+            
+            # Balance metrics
+            metrics = [
+                ("Academic Balance", school_scores['academic_balance']),
+                ("Behavior Balance", school_scores['behavior_balance']),
+                ("Size Balance", school_scores['size_balance']),
+                ("Assistance Balance", school_scores['assistance_balance'])
+            ]
+            
+            for name, metric_data in metrics:
+                writer.writerow([
+                    name,
+                    f"{metric_data['score']:.2f}",
+                    f"{metric_data['std_dev']:.3f}",
+                    f"{metric_data['mean']:.2f}",
+                    f"{metric_data['min_value']:.2f}",
+                    f"{metric_data['max_value']:.2f}",
+                    f"{metric_data['range']:.2f}"
+                ])
+            
+            # Add class-specific values
+            writer.writerow([])
+            writer.writerow(["Class-Specific Values"])
+            writer.writerow(["Class ID", "Academic Average", "Behavior Average", "Size", "Assistance Count"])
+            
+            for class_id in school_scores['academic_balance']['class_values'].keys():
+                writer.writerow([
+                    class_id,
+                    f"{school_scores['academic_balance']['class_values'][class_id]:.2f}",
+                    f"{school_scores['behavior_balance']['class_values'][class_id]:.2f}",
+                    school_scores['size_balance']['class_values'][class_id],
+                    school_scores['assistance_balance']['class_values'][class_id]
+                ])
+    
+    def _generate_config_report(self, output_dir: str) -> None:
+        """Generate configuration report showing all weights and parameters used."""
+        config_file = os.path.join(output_dir, "configuration.csv")
+        
+        with open(config_file, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            
+            # Header
+            writer.writerow(["Configuration Used for Scoring"])
+            writer.writerow(["Generated:", datetime.now().strftime("%Y-%m-%d %H:%M:%S")])
+            writer.writerow([])
+            
+            # Layer weights
+            writer.writerow(["Layer Weights"])
+            writer.writerow(["Layer", "Weight"])
+            writer.writerow(["Student Layer", self.config.weights.student_layer])
+            writer.writerow(["Class Layer", self.config.weights.class_layer])
+            writer.writerow(["School Layer", self.config.weights.school_layer])
+            writer.writerow([])
+            
+            # Student layer weights
+            writer.writerow(["Student Layer Weights"])
+            writer.writerow(["Metric", "Weight"])
+            writer.writerow(["Friends", self.config.weights.friends])
+            writer.writerow(["Dislikes", self.config.weights.dislikes])
+            writer.writerow([])
+            
+            # School layer weights
+            writer.writerow(["School Layer Weights"])
+            writer.writerow(["Metric", "Weight"])
+            writer.writerow(["Academic Balance", self.config.weights.academic_balance])
+            writer.writerow(["Behavior Balance", self.config.weights.behavior_balance])
+            writer.writerow(["Size Balance", self.config.weights.size_balance])
+            writer.writerow(["Assistance Balance", self.config.weights.assistance_balance])
+            writer.writerow([])
+            
+            # Normalization factors
+            writer.writerow(["Normalization Factors"])
+            writer.writerow(["Factor", "Value"])
+            writer.writerow(["Academic Score Factor", self.config.normalization.academic_score_factor])
+            writer.writerow(["Behavior Rank Factor", self.config.normalization.behavior_rank_factor])
+            writer.writerow(["Class Size Factor", self.config.normalization.class_size_factor])
+            writer.writerow(["Assistance Count Factor", self.config.normalization.assistance_count_factor])
+
+    def score_csv_file_with_reports(self, csv_file: str, output_dir: str = None) -> tuple[ScoringResult, str]:
+        """
+        Convenience method to score CSV file and generate reports in one call.
+        
+        Args:
+            csv_file: Path to CSV file containing student data
+            output_dir: Directory to save reports. If None, creates timestamp-based directory
+            
+        Returns:
+            Tuple of (ScoringResult, output_directory_path)
+        """
+        # Score the file
+        result = self.score_csv_file(csv_file)
+        
+        # Generate reports
+        output_path = self.generate_csv_reports(result, output_dir)
+        
+        return result, output_path 
