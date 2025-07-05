@@ -1,0 +1,28 @@
+============================================================
+MESHACHVETZ SCORING REPORT
+============================================================
+
+📊 OVERVIEW
+Total Students: 8
+Total Classes: 3
+Final Score: 75.18/100
+
+🏆 LAYER SCORES
+Student Layer: 61.25/100 (weight: 0.5)
+Class Layer:   77.78/100 (weight: 0.2)
+School Layer:  96.67/100 (weight: 0.3)
+
+👥 STUDENT SATISFACTION DETAILS
+Highly Satisfied Students (≥75): 4/8 (50.0%)
+Low Satisfaction Students (<50): 4/8 (50.0%)
+
+🏫 CLASS BALANCE DETAILS
+Class 1: 66.7/100 (M:2/F:1, Balance: 66.7)
+Class 2: 66.7/100 (M:1/F:2, Balance: 66.7)
+Class 3: 100.0/100 (M:1/F:1, Balance: 100.0)
+
+🏛️  SCHOOL BALANCE DETAILS
+Academic Balance: 98.3/100 (σ=0.83)
+Behavior Balance: 94.1/100 (σ=0.24)
+Size Balance: 97.6/100 (σ=0.47)
+Assistance Balance: 95.3/100 (σ=0.47)

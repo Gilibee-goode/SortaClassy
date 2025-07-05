@@ -1,6 +1,23 @@
 """
 Scorer layer for Meshachvetz - implements the three-layer scoring system.
+
+This package contains:
+- StudentScorer: Individual student satisfaction (friend placement, conflict avoidance)
+- ClassScorer: Intra-class balance (gender balance)
+- SchoolScorer: Inter-class balance (academic, behavior, size, assistance)
+- Scorer: Main orchestrator that combines all layers
+- ScoringResult: Data structure for scoring results
 """
 
-# This package will be implemented in Week 2 according to the implementation plan
-# Phase 1, Week 2: Scorer Implementation 
+from .student_scorer import StudentScorer
+from .class_scorer import ClassScorer
+from .school_scorer import SchoolScorer
+from .main_scorer import Scorer, ScoringResult
+
+__all__ = [
+    "StudentScorer",
+    "ClassScorer", 
+    "SchoolScorer",
+    "Scorer",
+    "ScoringResult"
+] 

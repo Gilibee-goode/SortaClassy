@@ -5,7 +5,7 @@ A comprehensive suite of tools designed to help educators create balanced studen
 ## Features
 
 - **Three-Layer Scoring System**: Student satisfaction, class balance, and school-wide equity
-- **Multiple Optimization Algorithms**: Genetic algorithms, simulated annealing, OR-Tools integration
+- **Multiple Optimization Algorithms**: Genetic algorithms, simulated annealing, OR-Tools integration (Coming in Phase 2)
 - **Flexible Configuration**: YAML-based configuration for weights and parameters
 - **Comprehensive Reporting**: Detailed CSV reports and analytics
 - **Force Constraints**: Support for mandatory class and friend group placements
@@ -35,14 +35,48 @@ pip install -e ".[dev]"
 ### 1. Prepare Your Data
 Create a CSV file with student data following the specified format (see [Data Format Specification](docs/02_data_format_specification.md)).
 
-### 2. Run the Scorer
-```bash
-meshachvetz score --input students.csv --output results/
+### 2. Score an Assignment
+```python
+from meshachvetz import Scorer
+
+# Create scorer with default configuration
+scorer = Scorer()
+
+# Score a CSV file
+result = scorer.score_csv_file('students.csv')
+
+# Display results
+print(f"Final Score: {result.final_score:.2f}/100")
+print(f"Student Satisfaction: {result.student_layer_score:.2f}/100")
+print(f"Class Balance: {result.class_layer_score:.2f}/100")
+print(f"School Balance: {result.school_layer_score:.2f}/100")
+
+# Generate detailed report
+report = scorer.get_detailed_report(result)
+print(report)
 ```
 
-### 3. Run the Optimizer (Coming in Phase 2)
+### 3. Customize Configuration
+```python
+from meshachvetz import Scorer, Config
+
+# Load custom configuration
+config = Config('config/custom_scoring.yaml')
+
+# Or modify weights programmatically
+config = Config()
+config.update_weights(
+    friends=0.8,        # Higher weight for friend satisfaction
+    student_layer=0.6   # Higher weight for student layer
+)
+
+scorer = Scorer(config)
+result = scorer.score_csv_file('students.csv')
+```
+
+### 4. Run Demo
 ```bash
-meshachvetz optimize --input students.csv --output results/ --algorithm genetic
+python examples/demo_scorer.py
 ```
 
 ## Documentation
@@ -58,20 +92,88 @@ meshachvetz optimize --input students.csv --output results/ --algorithm genetic
 
 This project is currently in **Phase 1: Foundation and Scorer** development.
 
-### Current Phase: Week 1 - Project Setup and Data Layer ✅ COMPLETED
-- [x] Project structure setup
-- [x] Requirements and packaging
-- [x] Data validation and loading utilities
-- [x] Configuration system
-- [x] Sample datasets
+### Current Phase: Week 2 - Scorer Implementation ✅ COMPLETED
+- [x] Student Layer scoring (friend satisfaction, conflict avoidance)
+- [x] Class Layer scoring (gender balance)
+- [x] School Layer scoring (academic, behavior, size, assistance balance)
+- [x] Weighted scoring combination system
+- [x] Comprehensive error handling and logging
+- [x] Configuration-driven scoring
+- [x] Detailed reporting and analytics
 
-**Next Phase: Week 2 - Scorer Implementation**
+**Current Capabilities:**
+- ✅ Complete three-layer scoring system
+- ✅ Individual student satisfaction analysis
+- ✅ Class-level gender balance evaluation
+- ✅ School-wide balance metrics (academic, behavior, size, assistance)
+- ✅ Configurable weights and parameters
+- ✅ Comprehensive reporting and analytics
+- ✅ Force constraint validation
+- ✅ Sample data and demonstration scripts
+
+**Next Phase: Week 3 - Scorer Integration and Testing**
+- [ ] Integrate all scoring layers into main Scorer class (✅ Already completed ahead of schedule)
+- [ ] Implement CSV output generation
+- [ ] Create command-line interface for scorer
+- [ ] Add configuration file support (YAML) (✅ Already completed)
+- [ ] Comprehensive testing and debugging
 
 See [Implementation Plan](docs/05_implementation_plan.md) for detailed roadmap.
+
+## Usage Examples
+
+### Scoring System Architecture
+
+The Meshachvetz scoring system uses a three-layer architecture:
+
+1. **Student Layer (Individual Satisfaction)**
+   - Friend Satisfaction: How many preferred friends are in the same class
+   - Conflict Avoidance: How many disliked peers are avoided
+
+2. **Class Layer (Intra-Class Balance)**
+   - Gender Balance: How evenly distributed genders are within each class
+
+3. **School Layer (Inter-Class Balance)**
+   - Academic Balance: How evenly academic scores are distributed across classes
+   - Behavior Balance: How evenly behavior ranks are distributed across classes
+   - Size Balance: How evenly students are distributed across classes
+   - Assistance Balance: How evenly assistance packages are distributed across classes
+
+### Sample Output
+
+```
+🏆 SCORING RESULTS
+Final Score: 75.18/100
+Total Students: 8
+Total Classes: 3
+
+📊 Layer Breakdown:
+   Student Layer: 61.25/100 (weight: 0.5)
+   Class Layer:   77.78/100 (weight: 0.2)
+   School Layer:  96.67/100 (weight: 0.3)
+
+👥 Student Satisfaction Analysis:
+   Average Satisfaction: 61.25/100
+   Highly Satisfied (≥75): 4/8
+   Students with Friends Placed: 4/8
+   Students with Conflicts: 1/8
+```
 
 ## Contributing
 
 This project follows a structured, phase-based development approach. Please see the [Implementation Plan](docs/05_implementation_plan.md) for current development priorities.
+
+## Testing
+
+Run the comprehensive test suite:
+
+```bash
+# Test Week 1 (Data Layer)
+python tests/test_week1_implementation.py
+
+# Test Week 2 (Scorer Implementation)
+python tests/test_week2_implementation.py
+```
 
 ## License
 
