@@ -65,7 +65,14 @@ class DataLoader:
                     
             # Convert to data models
             students = self._convert_to_students(df)
-            school_data = SchoolData.from_students_list(students)
+            
+            # Check if any students have empty class assignments
+            has_unassigned = any(not s.class_id or not s.class_id.strip() for s in students)
+            
+            if has_unassigned:
+                school_data = SchoolData.from_students_list_with_unassigned(students)
+            else:
+                school_data = SchoolData.from_students_list(students)
             
             return school_data
             

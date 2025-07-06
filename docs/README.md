@@ -2,106 +2,26 @@
 
 Welcome to the Meshachvetz project documentation! This collection of documents provides comprehensive guidance for implementing a student class assignment optimization system.
 
-## 📋 Document Index
+## 📖 **Documentation Index**
 
-### 1. [Project Overview](01_project_overview.md)
-**What it contains**: High-level project description, goals, architecture, and technology stack
-**When to read**: Start here for overall project understanding
-**Key sections**: 
-- Project objectives and features
-- System architecture overview
-- Development phases
-- Technology stack decisions
+### **📋 Project Planning and Design**
+- [01_project_overview.md](01_project_overview.md) - Project goals, stakeholders, and success criteria
+- [02_data_format_specification.md](02_data_format_specification.md) - CSV format, validation rules, and constraints
+- [03_scorer_design.md](03_scorer_design.md) - Three-layer scoring system architecture
+- [04_optimizer_design.md](04_optimizer_design.md) - Optimization algorithms and strategies
+- [05_implementation_plan.md](05_implementation_plan.md) - Development roadmap and milestones
+- [06_technical_specifications.md](06_technical_specifications.md) - APIs, data structures, and algorithms
 
-### 2. [Data Format Specification](02_data_format_specification.md)
-**What it contains**: Detailed CSV format specifications, validation rules, and sample data
-**When to read**: When implementing data loading or creating test datasets
-**Key sections**:
-- Required and optional CSV columns
-- Data validation rules
-- Sample input/output formats
-- File naming conventions
+### **🛠️ Implementation Guides**
+- [07_phase2_simple_guide.md](07_phase2_simple_guide.md) - Simple Phase 2 implementation guide
+- [08_phase2_week4_implementation.md](08_phase2_week4_implementation.md) - Complete Week 4 optimizer foundation implementation
 
-### 3. [Scorer Design](03_scorer_design.md)
-**What it contains**: Complete scoring system design with formulas and implementation details
-**When to read**: When implementing the scoring system (Phase 1)
-**Key sections**:
-- Three-layer scoring architecture
-- Mathematical formulas for each layer
-- Configuration system design
-- Class structure and APIs
+### **⚙️ Configuration and Usage**
+- [BEHAVIOR_RANK_UPDATE.md](BEHAVIOR_RANK_UPDATE.md) - A-D behavior rank system implementation
+- [CONFIGURATION_GUIDE.md](CONFIGURATION_GUIDE.md) - Complete configuration management guide
+- [CONFIG_MANAGEMENT.md](CONFIG_MANAGEMENT.md) - Advanced configuration set/reset system
 
-### 4. [Optimizer Design](04_optimizer_design.md)
-**What it contains**: Optimization algorithms, strategies, and performance considerations
-**When to read**: When implementing the optimization system (Phase 2)
-**Key sections**:
-- Multiple optimization algorithms
-- Multi-algorithm coordination strategies
-- Performance optimization techniques
-- Integration with scorer
-
-### 5. [Implementation Plan](05_implementation_plan.md)
-**What it contains**: Development roadmap, milestones, and project management details
-**When to read**: For project planning and progress tracking
-**Key sections**:
-- 12-week development plan
-- Technical milestones and acceptance criteria
-- Testing and quality assurance strategy
-- Risk management and success metrics
-
-### 6. [Technical Specifications](06_technical_specifications.md)
-**What it contains**: Detailed technical implementation details, APIs, and system architecture
-**When to read**: During implementation for specific technical details
-**Key sections**:
-- Data structures and models
-- API specifications
-- Algorithm implementations
-- Performance requirements
-
-### 7. [CLI User Guide](CLI_USER_GUIDE.md)
-**What it contains**: Simple, user-friendly guide for using the command-line interface
-**When to read**: For end users who want to use the CLI tool
-**Key sections**:
-- Getting started and installation
-- Basic and advanced CLI commands
-- Data format requirements
-- Troubleshooting and tips
-
-### 8. [Troubleshooting Guide](TROUBLESHOOTING.md)
-**What it contains**: Solutions for common issues and problems
-**When to read**: When encountering errors or unexpected behavior
-**Key sections**:
-- RuntimeWarning fixes
-- Installation problems
-- CLI issues and data validation errors
-- Platform-specific solutions
-
-### 9. [Phase 2 Simple Guide](07_phase2_simple_guide.md)
-**What it contains**: Clear, non-technical explanation of Phase 2 goals and implementation strategy
-**When to read**: Before starting Phase 2 implementation or to understand the development roadmap
-**Key sections**:
-- Week-by-week breakdown of Phase 2
-- Simple explanations of what we're building and why
-- Real-world examples and success criteria
-- Technical implementation strategy
-
-### 10. [Behavior Rank Update](BEHAVIOR_RANK_UPDATE.md)
-**What it contains**: Documentation of the behavior rank system update from A-E to A-D
-**When to read**: When working with behavior ranks or migrating existing data
-**Key sections**:
-- Changes to behavior rank range and descriptions
-- Updated expected distribution patterns
-- Technical implementation details
-- Impact on scoring and validation
-
-### 11. [Configuration Guide](CONFIGURATION_GUIDE.md)
-**What it contains**: Comprehensive guide for customizing weights, normalization factors, and system parameters
-**When to read**: When you want to adjust scoring behavior or optimize for specific priorities
-**Key sections**:
-- YAML configuration files and CLI weight overrides
-- Detailed parameter explanations and impact
-- Common configuration scenarios and examples
-- Best practices and troubleshooting tips
+### **📊 Features and Updates**
 
 ## 🚀 Quick Start Guide
 

@@ -249,15 +249,18 @@ class SchoolData:
                 if self.students[student.student_id] != student:
                     raise ValueError(f"Student {student.student_id} data inconsistent between class and students dict")
                     
-        # Check that all students in students dict are in some class
+        # Check that assigned students are in their correct classes
         students_in_classes = set()
         for class_data in self.classes.values():
             for student in class_data.students:
                 students_in_classes.add(student.student_id)
                 
-        for student_id in self.students:
-            if student_id not in students_in_classes:
-                raise ValueError(f"Student {student_id} not assigned to any class")
+        # Allow students to exist without class assignment (for initialization)
+        for student_id, student in self.students.items():
+            if student.class_id and student.class_id.strip():
+                # Student claims to be in a class, verify it exists and contains them
+                if student_id not in students_in_classes:
+                    raise ValueError(f"Student {student_id} claims to be in class '{student.class_id}' but is not found there")
     
     @property
     def total_students(self) -> int:
@@ -377,4 +380,48 @@ class SchoolData:
                 classes_dict[student.class_id] = ClassData(student.class_id, [])
             classes_dict[student.class_id].students.append(student)
             
-        return cls(classes_dict, students_dict) 
+        return cls(classes_dict, students_dict)
+    
+    @classmethod
+    def from_students_list_with_unassigned(cls, students: List[Student]) -> 'SchoolData':
+        """
+        Create SchoolData from a list of students, properly handling unassigned students.
+        
+        Args:
+            students: List of students, some may have empty class_id
+            
+        Returns:
+            SchoolData with assigned students in classes and unassigned students accessible
+        """
+        # Create students dict
+        students_dict = {s.student_id: s for s in students}
+        
+        # Group students by class, but only for assigned students
+        classes_dict = {}
+        for student in students:
+            if student.class_id and student.class_id.strip():
+                class_id = student.class_id.strip()
+                if class_id not in classes_dict:
+                    classes_dict[class_id] = ClassData(class_id, [])
+                classes_dict[class_id].students.append(student)
+        
+        return cls(classes_dict, students_dict)
+    
+    def get_unassigned_students(self) -> List[Student]:
+        """
+        Get list of students who are not assigned to any class.
+        
+        Returns:
+            List of unassigned students
+        """
+        assigned_student_ids = set()
+        for class_data in self.classes.values():
+            for student in class_data.students:
+                assigned_student_ids.add(student.student_id)
+        
+        unassigned = []
+        for student_id, student in self.students.items():
+            if student_id not in assigned_student_ids:
+                unassigned.append(student)
+        
+        return unassigned 

@@ -247,8 +247,14 @@ class DataValidator:
         """Validate class assignment."""
         class_id = row.get('class')
         
+        # Class assignment is now optional - empty values are acceptable
+        # This allows for CSVs with no initial assignments that need optimization
         if pd.isna(class_id) or str(class_id).strip() == '':
-            self.errors.append(f"Row {row_num}: Class cannot be empty")
+            self.warnings.append(f"Row {row_num}: Class assignment is empty - will need initialization for optimization")
+            return
+            
+        # If class is provided, no additional validation needed at this stage
+        # Class existence will be validated during assignment creation
             
     def _validate_social_preferences(self, row: pd.Series, row_num: int) -> None:
         """Validate social preference columns."""
