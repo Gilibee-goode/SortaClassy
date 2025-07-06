@@ -3,7 +3,7 @@ Configuration management for Meshachvetz - handles YAML configuration files
 for scoring weights and system parameters.
 """
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 import yaml
 from pathlib import Path
 from dataclasses import dataclass
@@ -70,49 +70,64 @@ class NormalizationFactors:
 
 
 @dataclass
+class ClassConfig:
+    """Configuration for class organization parameters."""
+    target_classes: int = 5
+    min_class_size: int = 15
+    max_class_size: int = 30
+    preferred_class_size: int = 25
+    allow_uneven_classes: bool = True
+    
+    def validate(self) -> None:
+        """Validate class configuration parameters."""
+        if self.target_classes <= 0:
+            raise ConfigError(f"Target classes must be positive: {self.target_classes}")
+        if self.min_class_size <= 0:
+            raise ConfigError(f"Min class size must be positive: {self.min_class_size}")
+        if self.max_class_size <= 0:
+            raise ConfigError(f"Max class size must be positive: {self.max_class_size}")
+        if self.preferred_class_size <= 0:
+            raise ConfigError(f"Preferred class size must be positive: {self.preferred_class_size}")
+        if self.min_class_size > self.max_class_size:
+            raise ConfigError(f"Min class size ({self.min_class_size}) cannot be greater than max class size ({self.max_class_size})")
+        if self.preferred_class_size < self.min_class_size or self.preferred_class_size > self.max_class_size:
+            raise ConfigError(f"Preferred class size ({self.preferred_class_size}) must be between min ({self.min_class_size}) and max ({self.max_class_size})")
+
+
+@dataclass
 class ValidationRules:
     """Configuration for data validation rules."""
-    # Student ID validation
     student_id_length: int = 9
-    student_id_pattern: str = r'^\d{9}$'
-    
-    # Name validation
     max_name_length: int = 50
-    
-    # Academic score validation
     min_academic_score: float = 0.0
     max_academic_score: float = 100.0
-    
-    # Behavior rank validation
-    valid_behavior_ranks: list = None
-    
-    # Boolean validation
-    valid_boolean_values: list = None
+    valid_behavior_ranks: List[str] = None
+    valid_boolean_values: List[str] = None
     
     def __post_init__(self):
-        """Set default values for lists."""
+        """Set default values for list fields."""
         if self.valid_behavior_ranks is None:
             self.valid_behavior_ranks = ['A', 'B', 'C', 'D', 'E']
-        
         if self.valid_boolean_values is None:
             self.valid_boolean_values = [
                 'true', 'false', '1', '0', 'yes', 'no',
                 'True', 'False', 'TRUE', 'FALSE', 'YES', 'NO'
             ]
-            
+    
     def validate(self) -> None:
-        """Validate configuration values."""
+        """Validate validation rules."""
         if self.student_id_length <= 0:
-            raise ConfigError("Student ID length must be positive")
-        
+            raise ConfigError(f"Student ID length must be positive: {self.student_id_length}")
         if self.max_name_length <= 0:
-            raise ConfigError("Max name length must be positive")
-            
-        if self.min_academic_score < 0 or self.max_academic_score < 0:
-            raise ConfigError("Academic score bounds must be non-negative")
-            
-        if self.min_academic_score >= self.max_academic_score:
-            raise ConfigError("Min academic score must be less than max")
+            raise ConfigError(f"Max name length must be positive: {self.max_name_length}")
+        if self.min_academic_score < 0:
+            raise ConfigError(f"Min academic score cannot be negative: {self.min_academic_score}")
+        if self.max_academic_score <= self.min_academic_score:
+            raise ConfigError(f"Max academic score ({self.max_academic_score}) must be greater than min ({self.min_academic_score})")
+        if not self.valid_behavior_ranks:
+            raise ConfigError("Valid behavior ranks cannot be empty")
+        if not self.valid_boolean_values:
+            raise ConfigError("Valid boolean values cannot be empty")
 
 
 class Config:
@@ -142,6 +157,13 @@ class Config:
                 'class': 0.2,
                 'school': 0.3
             }
+        },
+        'class_config': {
+            'target_classes': 5,
+            'min_class_size': 15,
+            'max_class_size': 30,
+            'preferred_class_size': 25,
+            'allow_uneven_classes': True
         },
         'normalization': {
             'academic_score_factor': 2.0,
@@ -264,6 +286,16 @@ class Config:
             school_layer=weights_config['layers']['school']
         )
         
+        # Create class config object
+        class_config_data = self.config_data['class_config']
+        self.class_config = ClassConfig(
+            target_classes=class_config_data['target_classes'],
+            min_class_size=class_config_data['min_class_size'],
+            max_class_size=class_config_data['max_class_size'],
+            preferred_class_size=class_config_data['preferred_class_size'],
+            allow_uneven_classes=class_config_data['allow_uneven_classes']
+        )
+        
         # Create normalization factors object
         norm_config = self.config_data['normalization']
         self.normalization = NormalizationFactors(
@@ -286,6 +318,7 @@ class Config:
         
         # Validate all objects
         self.weights.validate()
+        self.class_config.validate()
         self.normalization.validate()
         self.validation.validate()
         

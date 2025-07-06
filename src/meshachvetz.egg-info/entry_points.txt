@@ -1,0 +1,2 @@
+[console_scripts]
+meshachvetz = meshachvetz.cli.main:main

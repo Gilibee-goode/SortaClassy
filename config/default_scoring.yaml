@@ -24,6 +24,14 @@ weights:
     class: 0.2      # Class balance layer weight  
     school: 0.3     # School balance layer weight
 
+# Class Configuration: Parameters for class organization
+class_config:
+  target_classes: 5           # Target number of classes for optimization (Phase 2)
+  min_class_size: 15          # Minimum students per class
+  max_class_size: 30          # Maximum students per class
+  preferred_class_size: 25    # Preferred class size for optimal balance
+  allow_uneven_classes: true  # Allow slight size differences between classes
+
 # Normalization Factors: Used to convert standard deviations to 0-100 scores
 normalization:
   academic_score_factor: 2.0    # Higher = more sensitive to academic score imbalances

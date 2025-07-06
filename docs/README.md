@@ -58,6 +58,15 @@ Welcome to the Meshachvetz project documentation! This collection of documents p
 - Algorithm implementations
 - Performance requirements
 
+### 7. [CLI User Guide](CLI_USER_GUIDE.md)
+**What it contains**: Simple, user-friendly guide for using the command-line interface
+**When to read**: For end users who want to use the CLI tool
+**Key sections**:
+- Getting started and installation
+- Basic and advanced CLI commands
+- Data format requirements
+- Troubleshooting and tips
+
 ## 🚀 Quick Start Guide
 
 ### For Project Managers
@@ -70,11 +79,17 @@ Welcome to the Meshachvetz project documentation! This collection of documents p
 2. Review [Data Format Specification](02_data_format_specification.md) for data requirements
 3. Implement Phase 1 using [Scorer Design](03_scorer_design.md) and [Technical Specifications](06_technical_specifications.md)
 4. Implement Phase 2 using [Optimizer Design](04_optimizer_design.md)
+5. Test CLI functionality using [CLI User Guide](CLI_USER_GUIDE.md)
 
 ### For Data Analysts
 1. Focus on [Data Format Specification](02_data_format_specification.md) for data requirements
 2. Review [Scorer Design](03_scorer_design.md) for scoring metrics
 3. Use sample data formats to prepare test datasets
+
+### For End Users
+1. **Start here**: [CLI User Guide](CLI_USER_GUIDE.md) for step-by-step usage instructions
+2. Review [Data Format Specification](02_data_format_specification.md) for CSV format requirements
+3. Use the CLI to validate and score your student assignments
 
 ## 🏗️ Development Phases
 

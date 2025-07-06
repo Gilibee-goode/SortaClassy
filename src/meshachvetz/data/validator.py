@@ -131,7 +131,7 @@ class DataValidator:
     def _validate_rows(self, df: pd.DataFrame) -> None:
         """Validate each row of data."""
         for index, row in df.iterrows():
-            row_num = index + 1  # 1-based row numbering for user-friendly messages
+            row_num = int(index) + 1  # 1-based row numbering for user-friendly messages
             
             # Validate student ID
             self._validate_student_id(row, row_num)
@@ -316,7 +316,7 @@ class DataValidator:
                 
         # Check social preferences reference valid students
         for index, row in df.iterrows():
-            row_num = index + 1
+            row_num = int(index) + 1
             
             # Check preferred friends
             for i in range(1, 4):
@@ -356,7 +356,7 @@ class DataValidator:
                 
         # Validate force_class constraints
         for index, row in df.iterrows():
-            row_num = index + 1
+            row_num = int(index) + 1
             
             force_class = row.get('force_class')
             if not pd.isna(force_class) and str(force_class).strip():
@@ -372,7 +372,7 @@ class DataValidator:
         # Validate force_friend constraints
         force_groups = {}
         for index, row in df.iterrows():
-            row_num = index + 1
+            row_num = int(index) + 1
             
             force_friend = row.get('force_friend')
             if not pd.isna(force_friend) and str(force_friend).strip():
