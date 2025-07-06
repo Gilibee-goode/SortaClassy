@@ -189,6 +189,89 @@ class Scorer:
         school_data = self.load_data(csv_file)
         return self.calculate_scores(school_data)
     
+    def get_focused_summary(self, result: ScoringResult) -> str:
+        """
+        Generate a focused summary with the most important statistics from each layer.
+        Designed for CLI output - more detailed than basic results but not overwhelming.
+        
+        Args:
+            result: ScoringResult object
+            
+        Returns:
+            Formatted summary text
+        """
+        lines = []
+        lines.append("📈 DETAILED STATISTICS")
+        lines.append("-" * 40)
+        
+        # Student Layer Statistics
+        satisfaction_summary = self.get_student_satisfaction_summary(result)
+        lines.append(f"\n👥 STUDENT SATISFACTION")
+        
+        # Friend placement statistics
+        friend_rate = (satisfaction_summary['total_friends_placed'] / satisfaction_summary['total_friend_requests'] * 100) if satisfaction_summary['total_friend_requests'] > 0 else 0
+        lines.append(f"   Friend Placement: {satisfaction_summary['total_friends_placed']}/{satisfaction_summary['total_friend_requests']} ({friend_rate:.1f}%)")
+        lines.append(f"   Avg Friend Satisfaction: {satisfaction_summary['average_friend_satisfaction']:.1f}/100")
+        lines.append(f"   Avg Conflict Avoidance: {satisfaction_summary['average_conflict_avoidance']:.1f}/100")
+        
+        # Student satisfaction distribution
+        total = result.total_students
+        high_pct = satisfaction_summary['highly_satisfied_count'] / total * 100 if total > 0 else 0
+        low_pct = satisfaction_summary['low_satisfaction_count'] / total * 100 if total > 0 else 0
+        lines.append(f"   Satisfaction: {satisfaction_summary['highly_satisfied_count']} high ({high_pct:.1f}%), {satisfaction_summary['low_satisfaction_count']} low ({low_pct:.1f}%)")
+        
+        # Class Layer Statistics  
+        lines.append(f"\n🏫 CLASS BALANCE")
+        balanced_classes = 0
+        unbalanced_classes = 0
+        gender_scores = []
+        
+        for class_id, class_result in result.class_scores.items():
+            gender_score = class_result['gender_balance']['score']
+            gender_scores.append(gender_score)
+            if gender_score >= 80:  # Consider 80+ as well-balanced
+                balanced_classes += 1
+            else:
+                unbalanced_classes += 1
+        
+        avg_gender_balance = sum(gender_scores) / len(gender_scores) if gender_scores else 0
+        lines.append(f"   Gender Balance: {balanced_classes} balanced, {unbalanced_classes} unbalanced (avg: {avg_gender_balance:.1f}/100)")
+        
+        # Show class details if there are unbalanced classes
+        if unbalanced_classes > 0:
+            unbalanced_details = []
+            for class_id, class_result in result.class_scores.items():
+                gender_balance = class_result['gender_balance']
+                if gender_balance['score'] < 80:
+                    m_count = gender_balance['male_count']
+                    f_count = gender_balance['female_count']
+                    unbalanced_details.append(f"Class {class_id}: {m_count}M/{f_count}F ({gender_balance['score']:.0f})")
+            lines.append(f"   Unbalanced: {', '.join(unbalanced_details)}")
+        
+        # School Layer Statistics
+        lines.append(f"\n🏛️  SCHOOL BALANCE")
+        school_scores = result.school_scores
+        
+        # Show balance metrics with their standard deviations
+        academic_std = school_scores['academic_balance']['std_dev']
+        behavior_std = school_scores['behavior_balance']['std_dev']
+        size_std = school_scores['size_balance']['std_dev']
+        assistance_std = school_scores['assistance_balance']['std_dev']
+        
+        lines.append(f"   Academic Balance: {school_scores['academic_balance']['score']:.1f}/100 (σ={academic_std:.2f})")
+        lines.append(f"   Behavior Balance: {school_scores['behavior_balance']['score']:.1f}/100 (σ={behavior_std:.2f})")
+        lines.append(f"   Size Balance: {school_scores['size_balance']['score']:.1f}/100 (σ={size_std:.2f})")
+        lines.append(f"   Assistance Balance: {school_scores['assistance_balance']['score']:.1f}/100 (σ={assistance_std:.2f})")
+        
+        # Show class size ranges if there's significant variation
+        if size_std > 1.0:  # Only show if there's meaningful variation
+            class_sizes = [len(class_data.students) for class_data in result.school_data.classes.values()]
+            min_size = min(class_sizes)
+            max_size = max(class_sizes)
+            lines.append(f"   Class Sizes: {min_size}-{max_size} students (range: {max_size - min_size})")
+        
+        return "\n".join(lines)
+    
     def get_detailed_report(self, result: ScoringResult) -> str:
         """
         Generate a detailed text report of the scoring results.

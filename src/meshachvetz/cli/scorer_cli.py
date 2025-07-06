@@ -56,6 +56,9 @@ Examples:
   python scorer_cli.py score students.csv --reports --output results_2024
 
   # Score with detailed console output
+  python scorer_cli.py score students.csv --detailed
+
+  # Score with verbose logging and detailed statistics
   python scorer_cli.py score students.csv --verbose --detailed
 
   # Score with specific layer weights
@@ -72,7 +75,7 @@ Examples:
     score_parser.add_argument('--config', '-c', type=str, help='Path to YAML configuration file')
     score_parser.add_argument('--reports', '-r', action='store_true', help='Generate CSV reports')
     score_parser.add_argument('--output', '-o', type=str, help='Output directory for reports')
-    score_parser.add_argument('--detailed', '-d', action='store_true', help='Show detailed console report')
+    score_parser.add_argument('--detailed', '-d', action='store_true', help='Show detailed statistics from each scoring layer')
     score_parser.add_argument('--verbose', '-v', action='store_true', help='Enable verbose logging')
     score_parser.add_argument('--quiet', '-q', action='store_true', help='Suppress non-essential output')
     
@@ -185,8 +188,7 @@ def handle_score_command(args):
         
         # Show detailed report if requested
         if args.detailed:
-            print(f"\n📋 DETAILED REPORT")
-            print(scorer.get_detailed_report(result))
+            print(f"\n{scorer.get_focused_summary(result)}")
     
     print(f"\n✅ Scoring completed successfully!")
 
