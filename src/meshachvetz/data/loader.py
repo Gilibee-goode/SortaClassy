@@ -93,7 +93,8 @@ class DataLoader:
             raise FileNotFoundError(f"File not found: {file_path}")
             
         # Load with pandas, keeping string type for all columns initially
-        df = pd.read_csv(file_path, dtype=str, keep_default_na=False, na_values=[])
+        # Explicitly set index_col=False to prevent pandas from using first column as index
+        df = pd.read_csv(file_path, dtype=str, keep_default_na=False, na_values=[], index_col=False)
         
         # Basic cleanup
         if df.empty:

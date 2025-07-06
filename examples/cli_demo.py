@@ -37,47 +37,47 @@ def main():
     print("Follow along to see various command examples and their outputs.")
     
     # Change to the correct directory
-    os.chdir('src')
+    os.chdir('.')
     
     # Demo 1: Help command
     run_command(
-        "python -m meshachvetz.cli.main --help",
+        "./run_meshachvetz.sh --help",
         "Show CLI help and available commands"
     )
     
     # Demo 2: Score command help
     run_command(
-        "python -m meshachvetz.cli.main score --help",
+        "./run_meshachvetz.sh score --help",
         "Show scoring command options"
     )
     
     # Demo 3: Validate data
     run_command(
-        "python -m meshachvetz.cli.main validate ../examples/test_data/perfect_score_test.csv",
+        "./run_meshachvetz.sh validate examples/test_data/perfect_score_test.csv",
         "Validate CSV data format"
     )
     
     # Demo 4: Basic scoring
     run_command(
-        "python -m meshachvetz.cli.main score ../examples/test_data/perfect_score_test.csv",
+        "./run_meshachvetz.sh score examples/test_data/perfect_score_test.csv",
         "Score student assignments (basic output)"
     )
     
     # Demo 5: Scoring with reports
     run_command(
-        "python -m meshachvetz.cli.main score ../examples/test_data/perfect_score_test.csv --reports --quiet",
+        "./run_meshachvetz.sh score examples/test_data/perfect_score_test.csv --reports --quiet",
         "Score with CSV reports generation"
     )
     
     # Demo 6: Show configuration
     run_command(
-        "python -m meshachvetz.cli.main config show",
+        "./run_meshachvetz.sh config show",
         "Display current configuration settings"
     )
     
     # Demo 7: Custom weights
     run_command(
-        "python -m meshachvetz.cli.main score ../examples/test_data/perfect_score_test.csv --student-weight 0.8 --class-weight 0.1 --school-weight 0.1 --quiet",
+        "./run_meshachvetz.sh score examples/test_data/perfect_score_test.csv --student-weight 0.8 --class-weight 0.1 --school-weight 0.1 --quiet",
         "Score with custom weight settings"
     )
     

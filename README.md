@@ -12,23 +12,48 @@ A comprehensive suite of tools designed to help educators create balanced studen
 
 ## Installation
 
+### 🎯 Easy Installation (Recommended)
+
+**Windows Users:**
+1. Download the project files
+2. Double-click `install.bat`
+3. Wait for installation to complete
+4. You're ready to use Meshachvetz!
+
+**Mac/Linux Users:**
+1. Download the project files
+2. Double-click `install.sh` (or run `./install.sh` in terminal)
+3. Wait for installation to complete
+4. You're ready to use Meshachvetz!
+
 ### Prerequisites
 - Python 3.8 or higher
-- pip package manager
+- Windows, macOS, or Linux
 
-### Install from Source
+### 🔧 Manual Installation (Advanced Users)
+
+If you prefer manual installation:
+
 ```bash
-git clone https://github.com/meshachvetz/meshachvetz.git
-cd meshachvetz
+# Create virtual environment
+python -m venv meshachvetz_env
+
+# Activate virtual environment
+# Windows: meshachvetz_env\Scripts\activate
+# Mac/Linux: source meshachvetz_env/bin/activate
+
+# Install Meshachvetz
 pip install -e .
 ```
 
-### Development Installation
-```bash
-git clone https://github.com/meshachvetz/meshachvetz.git
-cd meshachvetz
-pip install -e ".[dev]"
-```
+### ✅ Verify Installation
+
+After installation, test that everything works:
+
+**Windows:** Double-click `run_meshachvetz.bat`
+**Mac/Linux:** Run `./run_meshachvetz.sh`
+
+You should see the help message if everything is working correctly.
 
 ## Quick Start
 
@@ -85,18 +110,34 @@ For users who prefer command-line tools, Meshachvetz includes a comprehensive CL
 
 ### Basic Usage
 
+**Windows:**
 ```bash
 # Score student assignments
-python -m meshachvetz.cli.main score your_students.csv
+run_meshachvetz.bat score your_students.csv
 
 # Generate detailed reports
-python -m meshachvetz.cli.main score your_students.csv --reports
+run_meshachvetz.bat score your_students.csv --reports
 
 # Validate data format
-python -m meshachvetz.cli.main validate your_students.csv
+run_meshachvetz.bat validate your_students.csv
 
 # View configuration
-python -m meshachvetz.cli.main show-config
+run_meshachvetz.bat show-config
+```
+
+**Mac/Linux:**
+```bash
+# Score student assignments
+./run_meshachvetz.sh score your_students.csv
+
+# Generate detailed reports
+./run_meshachvetz.sh score your_students.csv --reports
+
+# Validate data format
+./run_meshachvetz.sh validate your_students.csv
+
+# View configuration
+./run_meshachvetz.sh show-config
 ```
 
 ### Example Output
@@ -116,15 +157,28 @@ Final Score: 99.84/100
 
 ### Advanced Options
 
+**Windows:**
 ```bash
 # Adjust scoring weights
-python -m meshachvetz.cli.main score students.csv --student-weight 0.7 --class-weight 0.2
+run_meshachvetz.bat score students.csv --student-weight 0.7 --class-weight 0.2
 
 # Quiet mode for scripts
-python -m meshachvetz.cli.main score students.csv --quiet
+run_meshachvetz.bat score students.csv --quiet
 
 # Verbose output with detailed analysis
-python -m meshachvetz.cli.main score students.csv --verbose --detailed
+run_meshachvetz.bat score students.csv --verbose --detailed
+```
+
+**Mac/Linux:**
+```bash
+# Adjust scoring weights
+./run_meshachvetz.sh score students.csv --student-weight 0.7 --class-weight 0.2
+
+# Quiet mode for scripts
+./run_meshachvetz.sh score students.csv --quiet
+
+# Verbose output with detailed analysis
+./run_meshachvetz.sh score students.csv --verbose --detailed
 ```
 
 **📖 For complete CLI documentation, see the [CLI User Guide](docs/CLI_USER_GUIDE.md)**
@@ -138,6 +192,7 @@ python -m meshachvetz.cli.main score students.csv --verbose --detailed
 - [Implementation Plan](docs/05_implementation_plan.md)
 - [Technical Specifications](docs/06_technical_specifications.md)
 - [CLI User Guide](docs/CLI_USER_GUIDE.md) - **Start here for command-line usage**
+- [Troubleshooting Guide](docs/TROUBLESHOOTING.md) - **Solutions for common issues**
 
 ## Development Status
 

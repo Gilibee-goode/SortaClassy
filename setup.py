@@ -9,7 +9,7 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
 setup(
     name="meshachvetz",
     version="0.1.0",
-    author="Meshachvetz Team",
+    author="Gili Bee",
     description="A suite of tools for optimal student class assignment",
     long_description=long_description,
     long_description_content_type="text/markdown",

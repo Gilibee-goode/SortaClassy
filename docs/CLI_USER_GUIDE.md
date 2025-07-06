@@ -15,11 +15,46 @@ The tool gives you a score from 0-100, where 100 means perfect assignments and 0
 
 ### Step 1: Install the System
 
-If you haven't already, you'll need to install Meshachvetz:
+**🎯 EASY INSTALLATION (Recommended for most users):**
+
+**Windows Users:**
+1. Download the project files to your computer
+2. Double-click `install.bat` 
+3. Wait for installation to complete
+4. You're ready to go!
+
+**Mac/Linux Users:**
+1. Download the project files to your computer
+2. Double-click `install.sh` (or run `./install.sh` in terminal)
+3. Wait for installation to complete
+4. You're ready to go!
+
+**🔧 MANUAL INSTALLATION (For advanced users):**
+
+If you prefer to install manually or the easy installation doesn't work:
 
 ```bash
+# Create virtual environment
+python -m venv meshachvetz_env
+
+# Activate virtual environment
+# On Windows:
+meshachvetz_env\Scripts\activate
+# On Mac/Linux:
+source meshachvetz_env/bin/activate
+
+# Install Meshachvetz
 pip install -e .
 ```
+
+**✅ VERIFY INSTALLATION:**
+
+After installation, test that everything works:
+
+**Windows:** Double-click `run_meshachvetz.bat`
+**Mac/Linux:** Run `./run_meshachvetz.sh`
+
+You should see the help message if everything is working correctly.
 
 ### Step 2: Prepare Your Student Data
 
@@ -56,13 +91,23 @@ student_id,first_name,last_name,gender,class,academic_score,behavior_rank,assist
 
 To get a score for your current class assignments:
 
+**Windows:**
 ```bash
-python -m meshachvetz.cli.main score your_students.csv
+run_meshachvetz.bat score your_students.csv
+```
+
+**Mac/Linux:**
+```bash
+./run_meshachvetz.sh score your_students.csv
 ```
 
 **Example:**
 ```bash
-python -m meshachvetz.cli.main score examples/test_data/perfect_score_test.csv
+# Windows
+run_meshachvetz.bat score examples/test_data/perfect_score_test.csv
+
+# Mac/Linux
+./run_meshachvetz.sh score examples/test_data/perfect_score_test.csv
 ```
 
 This will show you:
@@ -75,8 +120,14 @@ This will show you:
 
 To get comprehensive CSV reports saved to files:
 
+**Windows:**
 ```bash
-python -m meshachvetz.cli.main score your_students.csv --reports
+run_meshachvetz.bat score your_students.csv --reports
+```
+
+**Mac/Linux:**
+```bash
+./run_meshachvetz.sh score your_students.csv --reports
 ```
 
 This creates a folder with detailed reports including:
@@ -90,8 +141,14 @@ This creates a folder with detailed reports including:
 
 Before scoring, check if your CSV file is formatted correctly:
 
+**Windows:**
 ```bash
-python -m meshachvetz.cli.main validate your_students.csv
+run_meshachvetz.bat validate your_students.csv
+```
+
+**Mac/Linux:**
+```bash
+./run_meshachvetz.sh validate your_students.csv
 ```
 
 This will tell you about any errors in your data file.
@@ -100,45 +157,52 @@ This will tell you about any errors in your data file.
 
 To see what weights and settings are being used:
 
+**Windows:**
 ```bash
-python -m meshachvetz.cli.main show-config
+run_meshachvetz.bat show-config
+```
+
+**Mac/Linux:**
+```bash
+./run_meshachvetz.sh show-config
 ```
 
 ### Advanced Options
 
 #### Quiet Mode (Less Output)
-```bash
-python -m meshachvetz.cli.main score your_students.csv --quiet
-```
+**Windows:** `run_meshachvetz.bat score your_students.csv --quiet`
+**Mac/Linux:** `./run_meshachvetz.sh score your_students.csv --quiet`
 
 #### Verbose Mode (More Details)
-```bash
-python -m meshachvetz.cli.main score your_students.csv --verbose
-```
+**Windows:** `run_meshachvetz.bat score your_students.csv --verbose`
+**Mac/Linux:** `./run_meshachvetz.sh score your_students.csv --verbose`
 
 #### Custom Output Directory
-```bash
-python -m meshachvetz.cli.main score your_students.csv --reports --output my_results
-```
+**Windows:** `run_meshachvetz.bat score your_students.csv --reports --output my_results`
+**Mac/Linux:** `./run_meshachvetz.sh score your_students.csv --reports --output my_results`
 
 #### Adjust Scoring Weights
 You can change how much each factor matters:
 
 ```bash
 # Make student happiness more important
-python -m meshachvetz.cli.main score your_students.csv --student-weight 0.7
+# Windows:
+run_meshachvetz.bat score your_students.csv --student-weight 0.7
+
+# Mac/Linux:
+./run_meshachvetz.sh score your_students.csv --student-weight 0.7
 
 # Make class balance more important  
-python -m meshachvetz.cli.main score your_students.csv --class-weight 0.4
+# Windows:
+run_meshachvetz.bat score your_students.csv --class-weight 0.4
 
-# Make school balance more important
-python -m meshachvetz.cli.main score your_students.csv --school-weight 0.5
+# Mac/Linux:
+./run_meshachvetz.sh score your_students.csv --class-weight 0.4
 ```
 
 #### Detailed Student Analysis
-```bash
-python -m meshachvetz.cli.main score your_students.csv --detailed
-```
+**Windows:** `run_meshachvetz.bat score your_students.csv --detailed`
+**Mac/Linux:** `./run_meshachvetz.sh score your_students.csv --detailed`
 
 ## Understanding Your Results
 
@@ -171,8 +235,12 @@ When you use `--reports`, you'll get these files:
 ## Example Workflow
 
 1. **Prepare your data**: Create a CSV file with student information
-2. **Validate**: `python -m meshachvetz.cli.main validate students.csv`
-3. **Score**: `python -m meshachvetz.cli.main score students.csv --reports --verbose`
+2. **Validate**: 
+   - **Windows:** `run_meshachvetz.bat validate students.csv`
+   - **Mac/Linux:** `./run_meshachvetz.sh validate students.csv`
+3. **Score**: 
+   - **Windows:** `run_meshachvetz.bat score students.csv --reports --verbose`
+   - **Mac/Linux:** `./run_meshachvetz.sh score students.csv --reports --verbose`
 4. **Review**: Open the generated report files to understand the results
 5. **Adjust**: If needed, modify class assignments and re-score
 
@@ -198,13 +266,26 @@ When you use `--reports`, you'll get these files:
 - Ensure your CSV has all required column names spelled correctly
 - Check for extra spaces in column names
 
+### "Python not found" or "Command not found"
+- Make sure you ran the installation script first
+- On Windows: Double-click `install.bat`
+- On Mac/Linux: Run `./install.sh`
+
 ## Getting Help
 
 ### Command Help
+**Windows:**
 ```bash
-python -m meshachvetz.cli.main --help
-python -m meshachvetz.cli.main score --help
-python -m meshachvetz.cli.main validate --help
+run_meshachvetz.bat --help
+run_meshachvetz.bat score --help
+run_meshachvetz.bat validate --help
+```
+
+**Mac/Linux:**
+```bash
+./run_meshachvetz.sh --help
+./run_meshachvetz.sh score --help
+./run_meshachvetz.sh validate --help
 ```
 
 ### Sample Data

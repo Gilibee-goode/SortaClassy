@@ -67,6 +67,15 @@ Welcome to the Meshachvetz project documentation! This collection of documents p
 - Data format requirements
 - Troubleshooting and tips
 
+### 8. [Troubleshooting Guide](TROUBLESHOOTING.md)
+**What it contains**: Solutions for common issues and problems
+**When to read**: When encountering errors or unexpected behavior
+**Key sections**:
+- RuntimeWarning fixes
+- Installation problems
+- CLI issues and data validation errors
+- Platform-specific solutions
+
 ## 🚀 Quick Start Guide
 
 ### For Project Managers
