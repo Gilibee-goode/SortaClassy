@@ -67,6 +67,7 @@
 - [ ] Design and implement base optimizer interface
 - [ ] Create optimization manager class
 - [ ] Implement force constraint handling (force_class, force_friend)
+- [ ] Implement minimum friend constraint system (configurable: default 1, allow 0/2/3+)
 - [ ] Implement random swap optimizer with constraint awareness
 - [ ] Add progress tracking and reporting
 - [ ] Integration with scorer for evaluation
@@ -74,6 +75,7 @@
 **Deliverables**:
 - Base optimizer framework
 - Force constraint handling system
+- Minimum friend constraint handling system
 - Random swap optimizer implementation
 - Progress tracking system
 - Integration tests with scorer

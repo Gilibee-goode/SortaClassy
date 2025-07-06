@@ -46,7 +46,7 @@ class DataValidator:
     ALL_COLUMNS = REQUIRED_COLUMNS + OPTIONAL_COLUMNS
     
     # Valid behavior ranks
-    VALID_BEHAVIOR_RANKS = {'A', 'B', 'C', 'D', 'E'}
+    VALID_BEHAVIOR_RANKS = {'A', 'B', 'C', 'D'}
     
     # Valid gender values
     VALID_GENDERS = {'M', 'F'}

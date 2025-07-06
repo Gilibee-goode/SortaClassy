@@ -155,9 +155,14 @@ constraints:
   class_size:
     min_students: 20
     max_students: 30
+  minimum_friends:
+    default: 1                    # Default minimum friends per student
+    allow_override: true          # Can be overridden via CLI
+    max_allowed: 3                # Maximum constraint value
   hard_constraints:
     - "gender_balance"
     - "class_size_limits"
+    - "minimum_friends"
   soft_constraints:
     - "social_preferences"
     - "academic_balance"
@@ -193,6 +198,7 @@ Must be satisfied in any valid solution:
 - Class size within specified limits
 - **Force Class**: Students with force_class specified cannot be moved
 - **Force Friend**: Students in force_friend groups must stay together
+- **Minimum Friends**: Each student must have at least N friends in their class (configurable, default: 1)
 - Mandatory groupings (if specified)
 
 ### Soft Constraints
@@ -213,10 +219,17 @@ Preferences that contribute to score but can be violated:
 - Optimizer treats groups as atomic entities
 - Group size affects optimization complexity
 
+**Minimum Friend Constraints:**
+- Each student must have at least N preferred friends in their class
+- Configurable parameter (default: 1, can be set to 0, 2, 3+)
+- Hard constraint that must be satisfied by all algorithms
+- Validation checks friend availability during optimization
+
 ### Validation Rules
 - Solution feasibility check
 - Constraint satisfaction verification
 - Force constraint compliance verification
+- Minimum friend constraint verification
 - Score calculation validation
 - Data integrity verification
 
@@ -301,4 +314,4 @@ Preferences that contribute to score but can be violated:
 ### Validation Datasets
 - Known optimal solutions for testing
 - Synthetic data generation
-- Real-world school data validation 
+- Real-world school data validation

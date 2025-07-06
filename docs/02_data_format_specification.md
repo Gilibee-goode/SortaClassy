@@ -53,10 +53,11 @@ The input CSV file must contain the following columns:
 - Decimal precision: up to 2 decimal places
 
 #### Behavior Rank
-- Must be one of: "A", "B", "C", "D", "E"
-- A = Excellent, B = Good, C = Medium, D = Below Average, E = Poor
+- Must be one of: "A", "B", "C", "D"
+- A = Excellent, B = Good, C = Almost Good, D = Not Good
 - Case-insensitive validation
 - Null values will be treated as "A" (Excellent)
+- **Expected Distribution**: Most students should be A, then B, with steep drop to C, and D being rare
 
 #### Assistance Package
 - Boolean values: true/false, 1/0, yes/no
@@ -189,9 +190,8 @@ The summary score combines all three layers using weighted averaging to produce 
 For numerical calculations, behavior ranks are converted:
 - A = 1 (Excellent)
 - B = 2 (Good)
-- C = 3 (Medium)
-- D = 4 (Below Average)
-- E = 5 (Poor)
+- C = 3 (Almost Good)
+- D = 4 (Not Good)
 
 ## File Naming Conventions
 - Input: `students_input.csv`

@@ -109,7 +109,7 @@ Examples:
     elif hasattr(args, 'quiet') and args.quiet:
         setup_logging("WARNING")
     else:
-        setup_logging("INFO")
+        setup_logging("WARNING")  # Default to WARNING, only show INFO with --verbose
     
     try:
         if args.command == 'score':

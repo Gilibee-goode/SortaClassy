@@ -29,6 +29,7 @@
 - **The Basic Framework**: The "engine" that can rearrange students between classes
 - **A Simple Algorithm**: Random swapping (like shuffling cards to get a better hand)
 - **Constraint Handling**: Make sure we follow the rules (force_class, force_friend)
+- **Minimum Friend Guarantee**: Ensure every student gets at least their minimum required friends (default: 1)
 - **Progress Tracking**: Show users what's happening during optimization
 
 #### What We'll Get
@@ -174,6 +175,7 @@ Meshachvetz: "Already done. Check the results_2024 folder."
 - **Base Classes**: `BaseOptimizer`, `OptimizationManager`, `OptimizationResult`
 - **Random Swap Algorithm**: Simple but effective baseline
 - **Force Constraints**: Handle force_class and force_friend requirements
+- **Minimum Friend Constraints**: Configurable minimum friend guarantees (default 1, allow 0/2/3+)
 - **CLI Integration**: Extend existing CLI with optimize command
 
 ### Week 5: Algorithms
@@ -187,6 +189,32 @@ Meshachvetz: "Already done. Check the results_2024 folder."
 - **Configuration**: YAML-based parameter management
 - **Testing**: Comprehensive test suite for all algorithms
 - **Documentation**: Complete user guides and technical documentation
+
+**Example Configuration for Minimum Friend Constraints**:
+```yaml
+# optimizer_config.yaml
+constraints:
+  minimum_friends:
+    default: 1                    # Every student gets at least 1 friend
+    allow_override: true          # Can be changed per optimization
+    max_allowed: 3                # Maximum constraint value
+  
+  force_constraints:
+    respect_force_class: true     # Honor force_class assignments
+    respect_force_friend: true    # Honor force_friend groups
+```
+
+**CLI Usage Examples**:
+```bash
+# Use default (minimum 1 friend per student)
+./run_meshachvetz.sh optimize students.csv --algorithm genetic
+
+# Require at least 2 friends per student
+./run_meshachvetz.sh optimize students.csv --min-friends 2
+
+# Allow students with 0 friends (disable constraint)
+./run_meshachvetz.sh optimize students.csv --min-friends 0
+```
 
 ---
 

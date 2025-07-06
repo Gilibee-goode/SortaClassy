@@ -13,10 +13,10 @@ weights:
   
   # School Layer: Inter-class balance metrics  
   school_layer:
-    academic_balance: 0.1     # Increased academic balance importance (was 0.3)
-    behavior_balance: 0.5     # Reduced behavior balance importance (was 0.2)
-    size_balance: 0.2         # Increased size balance importance (was 0.3)
-    assistance_balance: 0.2   # Reduced assistance balance importance (was 0.2)
+    academic_balance: 0.4     # Increased academic balance importance (was 0.3)
+    behavior_balance: 0.1     # Reduced behavior balance importance (was 0.2)
+    size_balance: 0.4         # Increased size balance importance (was 0.3)
+    assistance_balance: 0.1   # Reduced assistance balance importance (was 0.2)
   
   # Layer Weights: How much each layer contributes to final score
   layers:

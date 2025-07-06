@@ -76,9 +76,9 @@ class Student:
             raise ValueError(f"Academic score must be between 0 and 100, got: {self.academic_score}")
             
     def validate_behavior_rank(self) -> None:
-        """Validate behavior rank is A-E."""
-        if self.behavior_rank.upper() not in ['A', 'B', 'C', 'D', 'E']:
-            raise ValueError(f"Behavior rank must be A-E, got: {self.behavior_rank}")
+        """Validate behavior rank is A-D."""
+        if self.behavior_rank.upper() not in ['A', 'B', 'C', 'D']:
+            raise ValueError(f"Behavior rank must be A-D, got: {self.behavior_rank}")
         # Normalize to uppercase
         self.behavior_rank = self.behavior_rank.upper()
         
@@ -95,7 +95,7 @@ class Student:
         
     def get_numeric_behavior_rank(self) -> int:
         """Convert string behavior rank to numeric value for calculations."""
-        conversion = {"A": 1, "B": 2, "C": 3, "D": 4, "E": 5}
+        conversion = {"A": 1, "B": 2, "C": 3, "D": 4}
         return conversion.get(self.behavior_rank.upper(), 1)
         
     def get_preferred_friends(self) -> List[str]:

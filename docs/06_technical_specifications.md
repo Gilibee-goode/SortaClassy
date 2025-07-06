@@ -72,10 +72,18 @@ class Student:
         self.validate_behavior_rank()
         self.validate_force_constraints()
         
-    def get_numeric_behavior_rank(self) -> int:
-        """Convert string behavior rank to numeric value"""
-        conversion = {"A": 1, "B": 2, "C": 3, "D": 4, "E": 5}
-        return conversion.get(self.behavior_rank.upper(), 1)
+    def get_numeric_behavior_rank(behavior_rank: str) -> int:
+        """
+        Convert behavior rank string to numeric value.
+        
+        Args:
+            behavior_rank: String rank (A, B, C, D)
+            
+        Returns:
+            Numeric rank (1-4)
+        """
+        conversion = {"A": 1, "B": 2, "C": 3, "D": 4}
+        return conversion.get(behavior_rank.upper(), 1)  # Default to A=1
         
     def get_preferred_friends(self) -> List[str]:
         """Get list of non-empty preferred friends"""

@@ -1,0 +1,65 @@
+# Meshachvetz Default Scoring Configuration
+# This file defines the weights and parameters for the three-layer scoring system
+
+weights:
+  # Student Layer: Individual satisfaction metrics
+  student_layer:
+    friends: 0.7      # Weight for friend satisfaction (0-1)
+    dislikes: 0.3     # Weight for conflict avoidance (0-1)
+  
+  # Class Layer: Intra-class balance metrics
+  class_layer:
+    gender_balance: 1.0   # Weight for gender balance within classes
+  
+  # School Layer: Inter-class balance metrics  
+  school_layer:
+    academic_balance: 0.3     # Weight for academic score balance across classes
+    behavior_balance: 0.2     # Weight for behavior rank balance across classes
+    size_balance: 0.3         # Weight for class size balance
+    assistance_balance: 0.2   # Weight for assistance package distribution balance
+  
+  # Layer Weights: How much each layer contributes to final score
+  layers:
+    student: 0.5    # Student satisfaction layer weight
+    class: 0.2      # Class balance layer weight  
+    school: 0.3     # School balance layer weight
+
+# Class Configuration: Parameters for class organization
+class_config:
+  target_classes: 5           # Target number of classes for optimization (Phase 2)
+  min_class_size: 15          # Minimum students per class
+  max_class_size: 30          # Maximum students per class
+  preferred_class_size: 25    # Preferred class size for optimal balance
+  allow_uneven_classes: true  # Allow slight size differences between classes
+
+# Normalization Factors: Used to convert standard deviations to 0-100 scores
+normalization:
+  academic_score_factor: 2.0    # Higher = more sensitive to academic score imbalances
+  behavior_rank_factor: 35.0    # Higher = more sensitive to behavior rank imbalances (adjusted for A-D range)
+  class_size_factor: 5.0        # Higher = more sensitive to class size imbalances
+  assistance_count_factor: 10.0 # Higher = more sensitive to assistance distribution imbalances
+
+# Validation Rules: Data validation parameters
+validation:
+  student_id_length: 9              # Required length for student IDs
+  max_name_length: 50               # Maximum length for first/last names
+  min_academic_score: 0.0           # Minimum valid academic score
+  max_academic_score: 100.0         # Maximum valid academic score
+  valid_behavior_ranks:             # Valid behavior rank values
+    - A    # Excellent
+    - B    # Good  
+    - C    # Almost Good
+    - D    # Not Good
+  valid_boolean_values:             # Valid boolean representations
+    - 'true'
+    - 'false'
+    - '1'
+    - '0'
+    - 'yes'
+    - 'no'
+    - 'True'
+    - 'False'
+    - 'TRUE'
+    - 'FALSE'
+    - 'YES'
+    - 'NO' 

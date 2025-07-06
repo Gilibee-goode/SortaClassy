@@ -116,7 +116,7 @@ weights:
 
 normalization:
   academic_score_factor: 2.0
-  behavior_rank_factor: 25.0
+  behavior_rank_factor: 35.0
   class_size_factor: 5.0
   assistance_count_factor: 10.0
 ```
@@ -156,7 +156,7 @@ Before scoring, the system validates:
 2. Student IDs are unique and follow 9-digit format
 3. Class assignments are valid
 4. Social preference references exist (up to 3 preferred friends, up to 5 disliked peers)
-5. Behavior ranks are valid (A-E)
+5. Behavior ranks are valid (A-D)
 6. Force constraints are properly formatted
 7. Numeric values are within acceptable ranges
 
@@ -176,14 +176,15 @@ The scorer must account for placement constraints:
 Behavior ranks are converted from string to numeric for calculations:
 - A = 1 (Excellent)
 - B = 2 (Good) 
-- C = 3 (Medium)
-- D = 4 (Below Average)
-- E = 5 (Poor)
+- C = 3 (Almost Good)
+- D = 4 (Not Good)
 - Default for missing values: A = 1
+
+**Expected Distribution**: In a typical school, most students should have A or B behavior ranks, with a steep drop to C, and D being rare. This distribution reflects the expectation that behavior issues are the exception rather than the norm.
 
 ### Error Handling
 - Social preference columns are optional (empty strings allowed)
-- Invalid behavior ranks (not A-E) trigger validation errors
+- Invalid behavior ranks (not A-D) trigger validation errors
 - Force constraint references to non-existent students trigger validation errors
 - Warnings are logged for data quality issues
 - Graceful degradation when optional columns are missing
@@ -214,4 +215,4 @@ Behavior ranks are converted from string to numeric for calculations:
 - Integration tests with sample datasets
 - Performance benchmarks
 - Edge case validation (empty classes, missing data)
-- Configuration validation tests 
+- Configuration validation tests

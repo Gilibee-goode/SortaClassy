@@ -53,7 +53,7 @@ class ScoringWeights:
 class NormalizationFactors:
     """Configuration for normalization factors."""
     academic_score_factor: float = 2.0
-    behavior_rank_factor: float = 25.0
+    behavior_rank_factor: float = 35.0
     class_size_factor: float = 5.0
     assistance_count_factor: float = 10.0
     
@@ -107,7 +107,7 @@ class ValidationRules:
     def __post_init__(self):
         """Set default values for list fields."""
         if self.valid_behavior_ranks is None:
-            self.valid_behavior_ranks = ['A', 'B', 'C', 'D', 'E']
+            self.valid_behavior_ranks = ['A', 'B', 'C', 'D']
         if self.valid_boolean_values is None:
             self.valid_boolean_values = [
                 'true', 'false', '1', '0', 'yes', 'no',
@@ -167,7 +167,7 @@ class Config:
         },
         'normalization': {
             'academic_score_factor': 2.0,
-            'behavior_rank_factor': 25.0,
+            'behavior_rank_factor': 35.0,
             'class_size_factor': 5.0,
             'assistance_count_factor': 10.0
         },
@@ -176,7 +176,7 @@ class Config:
             'max_name_length': 50,
             'min_academic_score': 0.0,
             'max_academic_score': 100.0,
-            'valid_behavior_ranks': ['A', 'B', 'C', 'D', 'E'],
+            'valid_behavior_ranks': ['A', 'B', 'C', 'D'],
             'valid_boolean_values': [
                 'true', 'false', '1', '0', 'yes', 'no',
                 'True', 'False', 'TRUE', 'FALSE', 'YES', 'NO'
@@ -189,7 +189,8 @@ class Config:
         Initialize configuration.
         
         Args:
-            config_file: Path to YAML configuration file. If None, uses defaults.
+            config_file: Path to YAML configuration file. If None, tries to load from 
+                        default config file, falling back to defaults if not found.
         """
         self.config_file = config_file
         self.config_data = {}
@@ -198,11 +199,29 @@ class Config:
         if config_file:
             self.load_from_file(config_file)
         else:
-            self.config_data = self.DEFAULT_CONFIG.copy()
+            # Try to load from default config file
+            default_config_path = self._get_default_config_path()
+            if default_config_path and default_config_path.exists():
+                self.load_from_file(str(default_config_path))
+            else:
+                # Fall back to hardcoded defaults
+                self.config_data = self.DEFAULT_CONFIG.copy()
             
         # Create structured configuration objects
         self._create_config_objects()
-        
+    
+    def _get_default_config_path(self) -> Optional[Path]:
+        """Get the path to the default configuration file."""
+        try:
+            # Get the project root directory
+            current_file = Path(__file__)
+            # Go up: config.py -> utils -> meshachvetz -> src -> project_root
+            project_root = current_file.parent.parent.parent.parent
+            default_config_path = project_root / "config" / "default_scoring.yaml"
+            return default_config_path
+        except Exception:
+            return None
+            
     def load_from_file(self, file_path: str) -> None:
         """
         Load configuration from YAML file.

@@ -85,6 +85,24 @@ Welcome to the Meshachvetz project documentation! This collection of documents p
 - Real-world examples and success criteria
 - Technical implementation strategy
 
+### 10. [Behavior Rank Update](BEHAVIOR_RANK_UPDATE.md)
+**What it contains**: Documentation of the behavior rank system update from A-E to A-D
+**When to read**: When working with behavior ranks or migrating existing data
+**Key sections**:
+- Changes to behavior rank range and descriptions
+- Updated expected distribution patterns
+- Technical implementation details
+- Impact on scoring and validation
+
+### 11. [Configuration Guide](CONFIGURATION_GUIDE.md)
+**What it contains**: Comprehensive guide for customizing weights, normalization factors, and system parameters
+**When to read**: When you want to adjust scoring behavior or optimize for specific priorities
+**Key sections**:
+- YAML configuration files and CLI weight overrides
+- Detailed parameter explanations and impact
+- Common configuration scenarios and examples
+- Best practices and troubleshooting tips
+
 ## 🚀 Quick Start Guide
 
 ### For Project Managers
@@ -108,7 +126,8 @@ Welcome to the Meshachvetz project documentation! This collection of documents p
 ### For End Users
 1. **Start here**: [CLI User Guide](CLI_USER_GUIDE.md) for step-by-step usage instructions
 2. Review [Data Format Specification](02_data_format_specification.md) for CSV format requirements
-3. Use the CLI to validate and score your student assignments
+3. Use [Configuration Guide](CONFIGURATION_GUIDE.md) to customize weights and behavior
+4. Use the CLI to validate and score your student assignments
 
 ## 🏗️ Development Phases
 

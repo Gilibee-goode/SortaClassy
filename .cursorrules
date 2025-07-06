@@ -22,7 +22,7 @@ Before implementing ANY code or making changes, you MUST:
 
 ### Data Format Compliance
 - **Student ID**: Must be exactly 9 digits
-- **Behavior Rank**: String format A-E (A=Excellent, B=Good, C=Medium, D=Below Average, E=Poor)
+- **Behavior Rank**: String format A-D (A=Excellent, B=Good, C=Almost Good, D=Not Good)
 - **Social Preferences**: 3 optional preferred friend columns + 5 optional disliked peer columns
 - **Force Constraints**: `force_class` and `force_friend` must be handled properly
 - **All input validation** must follow `docs/02_data_format_specification.md`

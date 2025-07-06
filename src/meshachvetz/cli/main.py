@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from meshachvetz import __version__
 from .scorer_cli import main as scorer_main
+from .config_manager import handle_config_set_command, handle_config_reset_command, handle_config_status_command
 
 
 def main():
@@ -25,6 +26,10 @@ Available Commands:
   score      Score a student assignment CSV file
   validate   Validate a student data CSV file  
   config     Show or manage configuration
+    show     Show current configuration
+    set      Set a configuration file as the new default
+    reset    Reset configuration to original defaults
+    status   Show configuration status and paths
 
 Examples:
   # Score a CSV file with default settings
@@ -38,6 +43,15 @@ Examples:
 
   # Show current configuration
   meshachvetz config show
+
+  # Set a custom configuration as the new default
+  meshachvetz config set my_config.yaml
+
+  # Reset to original configuration
+  meshachvetz config reset
+
+  # Show configuration status
+  meshachvetz config status
 
 For more help on a specific command:
   meshachvetz <command> --help
@@ -79,6 +93,16 @@ For more help on a specific command:
     config_show_parser = config_subparsers.add_parser('show', help='Show current configuration')
     config_show_parser.add_argument('--config', '-c', type=str, help='Path to YAML configuration file')
     
+    # Config set subcommand
+    config_set_parser = config_subparsers.add_parser('set', help='Set a configuration file as the new default')
+    config_set_parser.add_argument('config_file', help='Path to YAML configuration file to set as default')
+    
+    # Config reset subcommand
+    config_reset_parser = config_subparsers.add_parser('reset', help='Reset configuration to original defaults')
+    
+    # Config status subcommand
+    config_status_parser = config_subparsers.add_parser('status', help='Show configuration status and paths')
+    
     # Parse arguments
     args = parser.parse_args()
     
@@ -98,6 +122,15 @@ For more help on a specific command:
                 # Handle config show
                 sys.argv = ['scorer_cli.py', 'show-config'] + (['--config', args.config] if args.config else [])
                 scorer_main()
+            elif args.config_command == 'set':
+                # Handle config set
+                handle_config_set_command(args.config_file)
+            elif args.config_command == 'reset':
+                # Handle config reset
+                handle_config_reset_command()
+            elif args.config_command == 'status':
+                # Handle config status
+                handle_config_status_command()
             else:
                 config_parser.print_help()
                 sys.exit(1)
