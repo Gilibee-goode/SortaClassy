@@ -97,8 +97,8 @@ Examples:
     optimize_parser.add_argument('--early-stop', type=float, default=0.1, help='Early stopping threshold')
     optimize_parser.add_argument('--accept-neutral', action='store_true', help='Accept neutral moves in optimization')
     optimize_parser.add_argument('--force-constraints', action='store_true', default=True, help='Respect force constraints')
-    optimize_parser.add_argument('--init-strategy', choices=['random', 'balanced', 'academic', 'social'], 
-                                default='balanced', help='Initialization strategy for unassigned students')
+    optimize_parser.add_argument('--init-strategy', choices=['random', 'balanced', 'constraint_aware', 'academic_balanced'], 
+                                default='constraint_aware', help='Initialization strategy for unassigned students')
     optimize_parser.add_argument('--no-auto-init', action='store_true', help='Disable automatic initialization')
     optimize_parser.add_argument('--target-classes', type=int, default=0, help='Target number of classes (0 for auto)')
     optimize_parser.add_argument('--verbose', '-v', action='store_true',
@@ -117,8 +117,8 @@ Examples:
         description='Generate initial class assignments for students without assignments.'
     )
     generate_parser.add_argument('csv_file', help='CSV file with student data')
-    generate_parser.add_argument('--strategy', choices=['random', 'balanced', 'academic', 'social'], 
-                                default='balanced', help='Assignment generation strategy')
+    generate_parser.add_argument('--strategy', choices=['random', 'balanced', 'constraint_aware', 'academic_balanced'], 
+                                default='constraint_aware', help='Assignment generation strategy')
     generate_parser.add_argument('--target-classes', type=int, default=0, help='Target number of classes (0 for auto)')
     generate_parser.add_argument('--config', '-c', type=str, help='Configuration file path')
     generate_parser.add_argument('--output', '-o', type=str, help='Output file path')
@@ -145,8 +145,8 @@ Examples:
                                default='compare', help='Comparison strategy')
     compare_parser.add_argument('--output', '-o', type=str, help='Output file for detailed comparison report')
     compare_parser.add_argument('--min-friends', type=int, default=1, help='Minimum friends required per student')
-    compare_parser.add_argument('--init-strategy', choices=['random', 'balanced', 'academic', 'social'], 
-                               default='balanced', help='Initialization strategy for unassigned students')
+    compare_parser.add_argument('--init-strategy', choices=['random', 'balanced', 'constraint_aware', 'academic_balanced'], 
+                               default='constraint_aware', help='Initialization strategy for unassigned students')
     compare_parser.add_argument('--target-classes', type=int, default=0, help='Target number of classes (0 for auto)')
     compare_parser.add_argument('--verbose', '-v', action='store_true',
                                 help='Enable verbose output (legacy - use --log-level debug instead)')

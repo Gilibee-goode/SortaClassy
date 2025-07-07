@@ -20,6 +20,7 @@ from .scorer_cli import handle_score_command, handle_validate_command, handle_sh
 from .optimizer_cli import handle_optimize_command, handle_compare_command, handle_generate_assignment_command
 from .config_manager import handle_config_set_command, handle_config_reset_command, handle_config_status_command
 from .baseline_cli import generate_baseline_command
+from .advanced_options import AdvancedOptionsManager
 
 
 class InteractiveSession:
@@ -30,6 +31,7 @@ class InteractiveSession:
         self.current_config = None
         self.temp_config_overrides = {}
         self.session_active = True
+        self.advanced_options = AdvancedOptionsManager()  # ← Add advanced options manager
         
     def display_header(self):
         """Display the application header."""
@@ -100,8 +102,9 @@ class InteractiveSession:
         print("5. Generate Assignment")
         print("6. Validate Data")
         print("7. Baseline Test")
-        print("8. Master Solver (Coming Soon)")
-        print("9. Exit")
+        print("8. Advanced Options")
+        print("9. Master Solver (Coming Soon)")
+        print("10. Exit")
         print("-" * 30)
         
     def display_config_menu(self):
@@ -189,61 +192,65 @@ class InteractiveSession:
         
     def handle_temp_config_override(self):
         """Handle temporary configuration override."""
-        print("\n⚠️  TEMPORARY CONFIGURATION OVERRIDE")
-        print("Changes will only apply to this session")
-        print("-" * 40)
-        
-        print("Available overrides:")
-        print("1. Student Layer Weight")
-        print("2. Class Layer Weight") 
-        print("3. School Layer Weight")
-        print("4. Friend Weight")
-        print("5. Conflict Weight")
-        print("6. Clear All Overrides")
-        print("7. Back")
-        
-        choice = self.get_user_input("Select override option", ['1', '2', '3', '4', '5', '6', '7'])
-        
-        if choice == '1':
-            value = self.get_user_input("Enter Student Layer Weight (0.0-1.0)")
-            try:
-                self.temp_config_overrides['student_layer'] = float(value)
-                print(f"✅ Student layer weight set to {value}")
-            except ValueError:
-                print("❌ Invalid number format")
-        elif choice == '2':
-            value = self.get_user_input("Enter Class Layer Weight (0.0-1.0)")
-            try:
-                self.temp_config_overrides['class_layer'] = float(value)
-                print(f"✅ Class layer weight set to {value}")
-            except ValueError:
-                print("❌ Invalid number format")
-        elif choice == '3':
-            value = self.get_user_input("Enter School Layer Weight (0.0-1.0)")
-            try:
-                self.temp_config_overrides['school_layer'] = float(value)
-                print(f"✅ School layer weight set to {value}")
-            except ValueError:
-                print("❌ Invalid number format")
-        elif choice == '4':
-            value = self.get_user_input("Enter Friend Weight (0.0-1.0)")
-            try:
-                self.temp_config_overrides['friends'] = float(value)
-                print(f"✅ Friend weight set to {value}")
-            except ValueError:
-                print("❌ Invalid number format")
-        elif choice == '5':
-            value = self.get_user_input("Enter Conflict Weight (0.0-1.0)")
-            try:
-                self.temp_config_overrides['dislikes'] = float(value)
-                print(f"✅ Conflict weight set to {value}")
-            except ValueError:
-                print("❌ Invalid number format")
-        elif choice == '6':
-            self.temp_config_overrides.clear()
-            print("✅ All temporary overrides cleared")
-        elif choice == '7':
-            return
+        while True:
+            print("\n⚠️  TEMPORARY CONFIGURATION OVERRIDE")
+            print("Changes will only apply to this session")
+            print("-" * 40)
+            
+            print("Available overrides:")
+            print("1. Student Layer Weight")
+            print("2. Class Layer Weight") 
+            print("3. School Layer Weight")
+            print("4. Friend Weight")
+            print("5. Conflict Weight")
+            print("6. Clear All Overrides")
+            print("7. Done - Continue to Advanced Options")
+            
+            choice = self.get_user_input("Select override option", ['1', '2', '3', '4', '5', '6', '7'])
+            
+            if choice == 'exit':
+                return
+            elif choice == '1':
+                value = self.get_user_input("Enter Student Layer Weight (0.0-1.0)")
+                try:
+                    self.temp_config_overrides['student_layer'] = float(value)
+                    print(f"✅ Student layer weight set to {value}")
+                except ValueError:
+                    print("❌ Invalid number format")
+            elif choice == '2':
+                value = self.get_user_input("Enter Class Layer Weight (0.0-1.0)")
+                try:
+                    self.temp_config_overrides['class_layer'] = float(value)
+                    print(f"✅ Class layer weight set to {value}")
+                except ValueError:
+                    print("❌ Invalid number format")
+            elif choice == '3':
+                value = self.get_user_input("Enter School Layer Weight (0.0-1.0)")
+                try:
+                    self.temp_config_overrides['school_layer'] = float(value)
+                    print(f"✅ School layer weight set to {value}")
+                except ValueError:
+                    print("❌ Invalid number format")
+            elif choice == '4':
+                value = self.get_user_input("Enter Friend Weight (0.0-1.0)")
+                try:
+                    self.temp_config_overrides['friends'] = float(value)
+                    print(f"✅ Friend weight set to {value}")
+                except ValueError:
+                    print("❌ Invalid number format")
+            elif choice == '5':
+                value = self.get_user_input("Enter Conflict Weight (0.0-1.0)")
+                try:
+                    self.temp_config_overrides['dislikes'] = float(value)
+                    print(f"✅ Conflict weight set to {value}")
+                except ValueError:
+                    print("❌ Invalid number format")
+            elif choice == '6':
+                self.temp_config_overrides.clear()
+                print("✅ All temporary overrides cleared")
+            elif choice == '7':
+                print("✅ Configuration overrides complete")
+                return
             
     def handle_score_assignment(self):
         """Handle score assignment operation."""
@@ -253,10 +260,10 @@ class InteractiveSession:
         # Show current configuration
         self.display_config_summary()
         
-        # Ask for configuration override
-        if self.ask_config_override():
-            self.handle_temp_config_override()
-            
+        # Ask for advanced options configuration
+        if self.advanced_options.quick_configure(self, "Configure advanced options for scoring?"):
+            print("✅ Advanced options configured!")
+        
         # Get file path
         csv_file = self.get_file_path("Enter CSV file path")
         if not csv_file:
@@ -267,28 +274,24 @@ class InteractiveSession:
             def __init__(self, session):
                 self.csv_file = csv_file
                 self.config = session.current_config
-                self.reports = False
+                # Use default values that will be overridden by advanced options
+                self.reports = True
                 self.output = None
                 self.detailed = True
                 self.verbose = False
                 self.quiet = False
-                self.student_weight = session.temp_config_overrides.get('student_layer')
-                self.class_weight = session.temp_config_overrides.get('class_layer')
-                self.school_weight = session.temp_config_overrides.get('school_layer')
-                self.friends_weight = session.temp_config_overrides.get('friends')
-                self.dislikes_weight = session.temp_config_overrides.get('dislikes')
+                self.log_level = 'normal'
                 
-        # Ask for reports
-        reports_choice = self.get_user_input("Generate CSV reports? (y/n)", ['y', 'n', 'yes', 'no'])
-        
         args = MockArgs(self)
-        args.reports = reports_choice.lower() in ['y', 'yes']
         
-        if args.reports:
-            output_dir = self.get_user_input("Enter output directory (press Enter for default)", [])
-            if output_dir and output_dir != 'exit':
-                args.output = output_dir
-                
+        # Apply advanced options to args
+        self.advanced_options.apply_to_args(args, "score")
+        
+        # Ask for output directory
+        output_dir = self.get_user_input("Enter output directory for reports (press Enter for default)", [])
+        if output_dir and output_dir != 'exit':
+            args.output = output_dir
+            
         # Execute scoring
         try:
             handle_score_command(args)
@@ -306,6 +309,10 @@ class InteractiveSession:
         # Ask for configuration override
         if self.ask_config_override():
             self.handle_temp_config_override()
+            
+        # Ask for advanced options configuration
+        if self.advanced_options.quick_configure(self, "Configure advanced options for this optimization?"):
+            print("✅ Advanced options configured!")
             
         # Get file path
         csv_file = self.get_file_path("Enter CSV file path")
@@ -340,6 +347,7 @@ class InteractiveSession:
                 self.algorithm = selected_algorithm
                 self.output = None
                 self.output_dir = None
+                # Use default values that will be overridden by advanced options
                 self.max_iterations = 1000
                 self.reports = True
                 self.detailed = True
@@ -352,8 +360,12 @@ class InteractiveSession:
                 self.init_strategy = 'constraint_aware'
                 self.no_auto_init = False
                 self.target_classes = None
+                self.log_level = 'normal'
                 
         args = MockArgs(self)
+        
+        # Apply advanced options to args
+        self.advanced_options.apply_to_args(args, "optimize")
         
         # Ask for output file
         output_file = self.get_user_input("Enter output file path (press Enter for default)", [])
@@ -378,6 +390,10 @@ class InteractiveSession:
         if self.ask_config_override():
             self.handle_temp_config_override()
             
+        # Ask for advanced options configuration
+        if self.advanced_options.quick_configure(self, "Configure advanced options for this comparison?"):
+            print("✅ Advanced options configured!")
+            
         # Get file path
         csv_file = self.get_file_path("Enter CSV file path")
         if not csv_file:
@@ -388,13 +404,15 @@ class InteractiveSession:
         print("1. Parallel (run all algorithms simultaneously)")
         print("2. Sequential (run algorithms one after another)")
         print("3. Best Of (run all and pick best result)")
+        print("4. Compare (detailed comparison)")
         
-        strategy_choice = self.get_user_input("Select strategy", ['1', '2', '3'])
+        strategy_choice = self.get_user_input("Select strategy", ['1', '2', '3', '4'])
         
         strategies = {
             '1': 'parallel',
             '2': 'sequential',
-            '3': 'best_of'
+            '3': 'best_of',
+            '4': 'compare'
         }
         
         selected_strategy = strategies[strategy_choice]
@@ -405,14 +423,23 @@ class InteractiveSession:
                 self.input_file = csv_file
                 self.algorithms = ['local_search', 'simulated_annealing', 'genetic']
                 self.strategy = selected_strategy
+                # Use default values that will be overridden by advanced options
                 self.max_iterations = 1000
                 self.min_friends = 1
                 self.init_strategy = 'constraint_aware'
                 self.target_classes = None
                 self.verbose = False
                 self.quiet = False
+                self.log_level = 'normal'
+                self.early_stop = 100
+                self.accept_neutral = False
+                self.force_constraints = True
+                self.no_auto_init = False
                 
         args = MockArgs(self)
+        
+        # Apply advanced options to args
+        self.advanced_options.apply_to_args(args, "compare")
         
         # Execute comparison
         try:
@@ -485,6 +512,10 @@ class InteractiveSession:
         # Show current configuration
         self.display_config_summary()
         
+        # Ask for advanced options configuration
+        if self.advanced_options.quick_configure(self, "Configure advanced options for assignment generation?"):
+            print("✅ Advanced options configured!")
+        
         # Get file path
         csv_file = self.get_file_path("Enter CSV file path")
         if not csv_file:
@@ -516,11 +547,16 @@ class InteractiveSession:
                 self.strategy = selected_strategy
                 self.output = None
                 self.output_dir = None
+                # Use default values that will be overridden by advanced options
                 self.target_classes = None
                 self.verbose = False
                 self.quiet = False
+                self.log_level = 'normal'
                 
         args = MockArgs(self)
+        
+        # Apply advanced options to args
+        self.advanced_options.apply_to_args(args, "generate")
         
         # Ask for output file
         output_file = self.get_user_input("Enter output file path (press Enter for default)", [])
@@ -565,19 +601,25 @@ class InteractiveSession:
         # Show current configuration
         self.display_config_summary()
         
+        # Ask for advanced options configuration
+        if self.advanced_options.quick_configure(self, "Configure advanced options for baseline generation?"):
+            print("✅ Advanced options configured!")
+        
         # Get file path
         csv_file = self.get_file_path("Enter CSV file path")
         if not csv_file:
             return
             
-        # Ask for optional parameters
-        print("\nBaseline options (press Enter for defaults):")
+        # Ask for optional parameters (still show basic options)
+        print("\nBaseline options (press Enter for defaults, or use Advanced Options for more control):")
         
         num_runs_input = self.get_user_input("Number of runs (default: 10)", [])
         num_runs = 10
         if num_runs_input and num_runs_input != 'exit':
             try:
                 num_runs = int(num_runs_input)
+                # Update advanced options if user provided input
+                self.advanced_options.options.num_runs = num_runs
             except ValueError:
                 print("⚠️ Invalid number, using default (10)")
         
@@ -586,6 +628,8 @@ class InteractiveSession:
         if max_iterations_input and max_iterations_input != 'exit':
             try:
                 max_iterations = int(max_iterations_input)
+                # Update advanced options if user provided input
+                self.advanced_options.options.max_iterations = max_iterations
             except ValueError:
                 print("⚠️ Invalid number, using default (1000)")
         
@@ -593,15 +637,18 @@ class InteractiveSession:
         output_dir = None
         if output_dir_input and output_dir_input != 'exit' and output_dir_input.strip():
             output_dir = output_dir_input.strip()
+            # Update advanced options if user provided input
+            self.advanced_options.options.output_dir = output_dir
             
         # Create mock args for existing function
         class MockArgs:
             def __init__(self, session):
                 self.csv_file = csv_file
                 self.config = session.current_config
-                self.num_runs = num_runs
-                self.max_iterations = max_iterations
-                self.output_dir = output_dir
+                # Use default values that will be overridden by advanced options
+                self.num_runs = 10
+                self.max_iterations = 1000
+                self.output_dir = None
                 self.output_prefix = 'baseline'
                 self.log_level = 'normal'
                 self.quiet = False
@@ -613,12 +660,57 @@ class InteractiveSession:
                 
         args = MockArgs(self)
         
+        # Apply advanced options to args
+        self.advanced_options.apply_to_args(args, "baseline")
+        
         # Execute baseline generation
         try:
             generate_baseline_command(args)
         except Exception as e:
             print(f"❌ Error during baseline generation: {e}")
             
+    def handle_advanced_options(self):
+        """Handle advanced options menu."""
+        print("\n⚙️  ADVANCED OPTIONS")
+        print("-" * 30)
+        
+        while self.session_active:
+            print("\nAdvanced Options Menu:")
+            print("1. Configure Advanced Options")
+            print("2. Show Current Options")
+            print("3. Reset to Defaults")
+            print("4. Quick Configure for Next Operation")
+            print("5. Back to Main Menu")
+            
+            choice = self.get_user_input("Select option", ['1', '2', '3', '4', '5'])
+            
+            if choice == 'exit':
+                return
+            elif choice == '1':
+                # Full configuration
+                if self.advanced_options.configure_interactive():
+                    print("✅ Advanced options configured successfully!")
+                else:
+                    print("❌ Configuration cancelled")
+            elif choice == '2':
+                # Show current options
+                self.advanced_options.show_current_options()
+            elif choice == '3':
+                # Reset to defaults
+                confirm = self.get_user_input("Reset all advanced options to defaults? (y/n)", ['y', 'n', 'yes', 'no'])
+                if confirm.lower() in ['y', 'yes']:
+                    self.advanced_options.reset_to_defaults()
+                    print("✅ Advanced options reset to defaults")
+            elif choice == '4':
+                # Quick configure
+                if self.advanced_options.quick_configure(self, "Configure advanced options for next operation?"):
+                    print("✅ Advanced options configured!")
+                else:
+                    print("ℹ️  Using current options")
+            elif choice == '5':
+                # Back to main menu
+                return
+                
     def run(self):
         """Run the interactive CLI session."""
         self.display_header()
@@ -626,7 +718,7 @@ class InteractiveSession:
         while self.session_active:
             self.display_main_menu()
             
-            choice = self.get_user_input("Select option", ['1', '2', '3', '4', '5', '6', '7', '8', '9'])
+            choice = self.get_user_input("Select option", ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'])
             
             if choice == 'exit':
                 break
@@ -645,8 +737,10 @@ class InteractiveSession:
             elif choice == '7':
                 self.handle_baseline_test()
             elif choice == '8':
-                print("🔧 Master Solver feature coming soon in next update!")
+                self.handle_advanced_options()
             elif choice == '9':
+                print("🔧 Master Solver feature coming soon in next update!")
+            elif choice == '10':
                 break
                 
         print("\n👋 Thank you for using Meshachvetz!")
