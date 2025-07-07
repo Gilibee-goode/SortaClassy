@@ -71,7 +71,7 @@ class AdvancedOptionsManager:
         print("\n🔒 Constraint Options:")
         print(f"  Force Constraints: {self.options.force_constraints}")
         print(f"  Init Strategy: {self.options.init_strategy}")
-        print(f"  Target Classes: {self.options.target_classes or 'Auto'}")
+        print(f"  Target Number of Classes: {self.options.target_classes or 'Auto-calculate'}")
         print(f"  No Auto Init: {self.options.no_auto_init}")
         
         print("\n📁 Output Control:")
@@ -233,13 +233,16 @@ class AdvancedOptionsManager:
             print("❌ Invalid strategy")
         
         # Target classes
-        current_target = self.options.target_classes or "Auto"
-        target_classes = input(f"Target classes ({current_target}): ").strip()
-        if target_classes.lower() in ['auto', 'none', '']:
+        current_target = self.options.target_classes or "Auto-calculate"
+        print(f"\nTarget number of classes to create: {current_target}")
+        print("(Auto-calculate will determine optimal number based on student count)")
+        target_classes = input("Enter number of classes (or 'auto' for automatic): ").strip()
+        if target_classes.lower() in ['auto', 'auto-calculate', 'none', '']:
             self.options.target_classes = None
         elif target_classes:
             try:
                 self.options.target_classes = int(target_classes)
+                print(f"✅ Target classes set to {target_classes}")
             except ValueError:
                 print("❌ Invalid number")
         

@@ -213,7 +213,7 @@ class DataValidator:
         score = row.get('academic_score')
         
         if pd.isna(score):
-            self.warnings.append(f"Row {row_num}: Academic score is missing, will default to 0.0")
+            self.warnings.append(f"Row {row_num}: Academic score is missing, will be filled with column average during loading")
             return
             
         try:
@@ -228,20 +228,20 @@ class DataValidator:
         rank = row.get('behavior_rank')
         
         if pd.isna(rank) or str(rank).strip() == '':
-            self.warnings.append(f"Row {row_num}: Behavior rank is missing, will default to 'A'")
+            self.warnings.append(f"Row {row_num}: Behavior rank is missing, will be filled with most common rank during loading")
             return
             
         rank_str = str(rank).strip().upper()
         
         if rank_str not in self.VALID_BEHAVIOR_RANKS:
-            self.errors.append(f"Row {row_num}: Behavior rank must be A-E, got: {rank}")
+            self.errors.append(f"Row {row_num}: Behavior rank must be A-D, got: {rank}")
             
     def _validate_studentiality_rank(self, row: pd.Series, row_num: int) -> None:
         """Validate studentiality rank."""
         rank = row.get('studentiality_rank')
         
         if pd.isna(rank) or str(rank).strip() == '':
-            self.warnings.append(f"Row {row_num}: Studentiality rank is missing, will default to 'A'")
+            self.warnings.append(f"Row {row_num}: Studentiality rank is missing, will be filled with most common rank during loading")
             return
             
         rank_str = str(rank).strip().upper()

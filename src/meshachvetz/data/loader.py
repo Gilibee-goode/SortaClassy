@@ -22,6 +22,7 @@ class DataLoader:
     
     Features:
     - CSV file loading with error handling
+    - Missing data imputation using column averages for ranged fields
     - Data type conversion and normalization
     - Integration with DataValidator
     - Conversion to Student, ClassData, and SchoolData models
@@ -37,6 +38,7 @@ class DataLoader:
         """
         self.validate_data = validate_data
         self.validator = DataValidator() if validate_data else None
+        self.imputation_stats = {}  # Store imputation statistics
         
     def load_csv(self, file_path: str) -> SchoolData:
         """
@@ -55,6 +57,9 @@ class DataLoader:
         try:
             # Load CSV file
             df = self._load_csv_file(file_path)
+            
+            # Apply missing data imputation
+            df = self._apply_missing_data_imputation(df)
             
             # Validate data if requested
             if self.validate_data:
@@ -84,7 +89,188 @@ class DataLoader:
             raise DataLoadError(f"Error parsing CSV file: {e}")
         except Exception as e:
             raise DataLoadError(f"Unexpected error loading data: {e}")
+    
+    def _apply_missing_data_imputation(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Apply missing data imputation using column averages for ranged fields.
+        
+        Args:
+            df: DataFrame with potentially missing data
             
+        Returns:
+            DataFrame with missing values filled using averages
+        """
+        # Reset imputation stats
+        self.imputation_stats = {
+            'academic_score': {'count': 0, 'average': 0.0},
+            'behavior_rank': {'count': 0, 'average': 'A'},
+            'studentiality_rank': {'count': 0, 'average': 'A'}
+        }
+        
+        # Create a copy to avoid modifying the original
+        df_imputed = df.copy()
+        
+        # Handle academic_score (numeric field)
+        if 'academic_score' in df_imputed.columns:
+            df_imputed = self._impute_academic_score(df_imputed)
+        
+        # Handle behavior_rank (categorical field A-D)
+        if 'behavior_rank' in df_imputed.columns:
+            df_imputed = self._impute_behavior_rank(df_imputed)
+        
+        # Handle studentiality_rank (categorical field A-D)
+        if 'studentiality_rank' in df_imputed.columns:
+            df_imputed = self._impute_studentiality_rank(df_imputed)
+        
+        return df_imputed
+    
+    def _impute_academic_score(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Impute missing academic scores using column average.
+        
+        Args:
+            df: DataFrame with academic_score column
+            
+        Returns:
+            DataFrame with academic_score missing values filled
+        """
+        score_col = 'academic_score'
+        
+        # Convert to numeric, marking non-numeric as NaN
+        df[score_col] = pd.to_numeric(df[score_col], errors='coerce')
+        
+        # Count missing values
+        missing_count = df[score_col].isna().sum()
+        
+        if missing_count > 0:
+            # Calculate average of non-missing values
+            valid_scores = df[score_col].dropna()
+            if len(valid_scores) > 0:
+                average_score = valid_scores.mean()
+                # Fill missing values with average
+                df[score_col] = df[score_col].fillna(average_score)
+                
+                # Store imputation stats
+                self.imputation_stats['academic_score'] = {
+                    'count': missing_count,
+                    'average': round(average_score, 2)
+                }
+                
+                print(f"Imputed {missing_count} missing academic scores with average: {average_score:.2f}")
+            else:
+                # If all values are missing, use default
+                df[score_col] = df[score_col].fillna(0.0)
+                self.imputation_stats['academic_score'] = {
+                    'count': missing_count,
+                    'average': 0.0
+                }
+                print(f"All academic scores missing, using default: 0.0")
+        
+        return df
+    
+    def _impute_behavior_rank(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Impute missing behavior ranks using most common rank (mode).
+        
+        Args:
+            df: DataFrame with behavior_rank column
+            
+        Returns:
+            DataFrame with behavior_rank missing values filled
+        """
+        rank_col = 'behavior_rank'
+        
+        # Standardize values and identify missing
+        df[rank_col] = df[rank_col].astype(str).str.strip().str.upper()
+        missing_mask = df[rank_col].isin(['', 'NAN', 'NONE', 'NULL'])
+        missing_count = missing_mask.sum()
+        
+        if missing_count > 0:
+            # Get valid ranks
+            valid_ranks = df[~missing_mask][rank_col]
+            valid_ranks = valid_ranks[valid_ranks.isin(['A', 'B', 'C', 'D'])]
+            
+            if len(valid_ranks) > 0:
+                # Calculate mode (most common rank)
+                mode_rank = valid_ranks.mode().iloc[0] if not valid_ranks.mode().empty else 'A'
+                
+                # Fill missing values with mode
+                df.loc[missing_mask, rank_col] = mode_rank
+                
+                # Store imputation stats
+                self.imputation_stats['behavior_rank'] = {
+                    'count': missing_count,
+                    'average': mode_rank
+                }
+                
+                print(f"Imputed {missing_count} missing behavior ranks with mode: {mode_rank}")
+            else:
+                # If all values are missing, use default
+                df.loc[missing_mask, rank_col] = 'A'
+                self.imputation_stats['behavior_rank'] = {
+                    'count': missing_count,
+                    'average': 'A'
+                }
+                print(f"All behavior ranks missing, using default: A")
+        
+        return df
+    
+    def _impute_studentiality_rank(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Impute missing studentiality ranks using most common rank (mode).
+        
+        Args:
+            df: DataFrame with studentiality_rank column
+            
+        Returns:
+            DataFrame with studentiality_rank missing values filled
+        """
+        rank_col = 'studentiality_rank'
+        
+        # Standardize values and identify missing
+        df[rank_col] = df[rank_col].astype(str).str.strip().str.upper()
+        missing_mask = df[rank_col].isin(['', 'NAN', 'NONE', 'NULL'])
+        missing_count = missing_mask.sum()
+        
+        if missing_count > 0:
+            # Get valid ranks
+            valid_ranks = df[~missing_mask][rank_col]
+            valid_ranks = valid_ranks[valid_ranks.isin(['A', 'B', 'C', 'D'])]
+            
+            if len(valid_ranks) > 0:
+                # Calculate mode (most common rank)
+                mode_rank = valid_ranks.mode().iloc[0] if not valid_ranks.mode().empty else 'A'
+                
+                # Fill missing values with mode
+                df.loc[missing_mask, rank_col] = mode_rank
+                
+                # Store imputation stats
+                self.imputation_stats['studentiality_rank'] = {
+                    'count': missing_count,
+                    'average': mode_rank
+                }
+                
+                print(f"Imputed {missing_count} missing studentiality ranks with mode: {mode_rank}")
+            else:
+                # If all values are missing, use default
+                df.loc[missing_mask, rank_col] = 'A'
+                self.imputation_stats['studentiality_rank'] = {
+                    'count': missing_count,
+                    'average': 'A'
+                }
+                print(f"All studentiality ranks missing, using default: A")
+        
+        return df
+    
+    def get_imputation_summary(self) -> Dict[str, Any]:
+        """
+        Get a summary of missing data imputation performed.
+        
+        Returns:
+            Dictionary with imputation statistics
+        """
+        return self.imputation_stats.copy()
+        
     def _load_csv_file(self, file_path: str) -> pd.DataFrame:
         """
         Load CSV file into pandas DataFrame with proper handling.
@@ -157,7 +343,7 @@ class DataLoader:
             gender = self._get_string_value(row, 'gender', default='').upper()
             class_id = self._get_string_value(row, 'class')
             
-            # Convert numeric fields
+            # Convert numeric fields - no longer need defaults since imputation was applied
             academic_score = self._get_float_value(row, 'academic_score', default=0.0)
             behavior_rank = self._get_string_value(row, 'behavior_rank', default='A').upper()
             studentiality_rank = self._get_string_value(row, 'studentiality_rank', default='A').upper()
@@ -292,6 +478,9 @@ class DataLoader:
         """
         df = self._load_csv_file(file_path)
         
+        # Apply missing data imputation
+        df = self._apply_missing_data_imputation(df)
+        
         if self.validate_data:
             validation_result = self.validator.validate_dataframe(df)
             if not validation_result['valid']:
@@ -344,6 +533,10 @@ class DataLoader:
             'total_forced_groups': len(school_data.get_force_friend_groups())
         }
         
+        # Add imputation statistics
+        if hasattr(self, 'imputation_stats'):
+            summary['imputation_stats'] = self.imputation_stats
+        
         return summary
         
     def export_to_csv(self, school_data: SchoolData, output_path: str) -> None:
@@ -365,6 +558,7 @@ class DataLoader:
                 'class': student.class_id,
                 'academic_score': student.academic_score,
                 'behavior_rank': student.behavior_rank,
+                'studentiality_rank': student.studentiality_rank,
                 'assistance_package': student.assistance_package,
                 'preferred_friend_1': student.preferred_friend_1,
                 'preferred_friend_2': student.preferred_friend_2,
