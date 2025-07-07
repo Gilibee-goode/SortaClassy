@@ -68,6 +68,20 @@ Always implement according to `docs/03_scorer_design.md`:
 - Include percentage-based metrics for student satisfaction
 - Follow file naming conventions: `results_YYYY-MM-DD_HH-MM-SS/`
 
+## Version Control Rules
+
+### Git Commit Policy
+- **DO NOT** perform git commits automatically
+- **DO NOT** use `git add` and `git commit` commands
+- The user will handle all git operations manually
+- You may use `git status` to check the current state if needed
+- Focus on code implementation and testing, not version control
+
+### File Staging
+- Files may be staged using `git add` only if explicitly requested by the user
+- Default behavior is to implement and test code without version control operations
+- Inform the user when significant changes are ready for staging/commit
+
 ## Documentation Maintenance and Progress Tracking
 
 ### Update Documentation as You Go
@@ -75,7 +89,7 @@ Always implement according to `docs/03_scorer_design.md`:
 - **Document Changes**: If implementation reveals necessary changes to design, update relevant docs immediately
 - **Add Examples**: Include working code examples in technical specifications when implementing APIs
 - **Update README**: Keep `docs/README.md` current with actual project status
-- **Version Control**: Commit documentation updates alongside code changes
+- **Version Control**: User will commit documentation updates alongside code changes
 
 ### Progress Tracking Requirements
 - **Phase Completion**: Clearly mark when each phase milestone is achieved
@@ -92,7 +106,7 @@ Always implement according to `docs/03_scorer_design.md`:
 5. **At feature completion**: Update examples and usage documentation
 
 ## Validation Checklist
-Before committing any code, verify:
+Before notifying user that code is ready, verify:
 - [ ] Read and understood relevant documentation
 - [ ] Follows current implementation phase requirements
 - [ ] Data format compliance maintained
@@ -107,6 +121,7 @@ Before committing any code, verify:
 - Cite the implementation plan phase when justifying approach
 - Explain how the code aligns with the three-layer architecture
 - Always mention which milestone/deliverable the work contributes to
+- Notify user when changes are ready for git operations
 
 ## Forbidden Actions
 - ❌ Do NOT implement optimizer before scorer is complete
@@ -115,5 +130,7 @@ Before committing any code, verify:
 - ❌ Do NOT ignore force constraint handling
 - ❌ Do NOT deviate from the specified data format
 - ❌ Do NOT implement features not in the current phase
+- ❌ Do NOT perform git commits or automated version control operations
+- ❌ Do NOT use git add/commit commands without explicit user request
 
 Remember: This is a structured, phase-based implementation. Always start with documentation, follow the plan, and build incrementally according to the milestones. 
