@@ -10,6 +10,7 @@ from .simulated_annealing import SimulatedAnnealingOptimizer
 from .genetic import GeneticOptimizer
 from .or_tools_optimizer import ORToolsOptimizer
 from .optimization_manager import OptimizationManager, AssignmentStatus, InitializationStrategy
+from .baseline_generator import BaselineGenerator, BaselineStatistics, BaselineRun
 
 __all__ = [
     'BaseOptimizer',
@@ -21,7 +22,10 @@ __all__ = [
     'ORToolsOptimizer',
     'OptimizationManager',
     'AssignmentStatus',
-    'InitializationStrategy'
+    'InitializationStrategy',
+    'BaselineGenerator',
+    'BaselineStatistics',
+    'BaselineRun'
 ]
 
 __version__ = "1.0.0" 

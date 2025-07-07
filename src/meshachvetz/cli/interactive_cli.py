@@ -19,6 +19,7 @@ from meshachvetz import Config, Scorer
 from .scorer_cli import handle_score_command, handle_validate_command, handle_show_config_command
 from .optimizer_cli import handle_optimize_command, handle_compare_command, handle_generate_assignment_command
 from .config_manager import handle_config_set_command, handle_config_reset_command, handle_config_status_command
+from .baseline_cli import generate_baseline_command
 
 
 class InteractiveSession:
@@ -98,7 +99,7 @@ class InteractiveSession:
         print("4. Configuration")
         print("5. Generate Assignment")
         print("6. Validate Data")
-        print("7. Baseline Test (Coming Soon)")
+        print("7. Baseline Test")
         print("8. Master Solver (Coming Soon)")
         print("9. Exit")
         print("-" * 30)
@@ -556,6 +557,68 @@ class InteractiveSession:
         except Exception as e:
             print(f"❌ Error during validation: {e}")
             
+    def handle_baseline_test(self):
+        """Handle baseline test generation operation."""
+        print("\n🎯 GENERATE BASELINE")
+        print("-" * 30)
+        
+        # Show current configuration
+        self.display_config_summary()
+        
+        # Get file path
+        csv_file = self.get_file_path("Enter CSV file path")
+        if not csv_file:
+            return
+            
+        # Ask for optional parameters
+        print("\nBaseline options (press Enter for defaults):")
+        
+        num_runs_input = self.get_user_input("Number of runs (default: 10)", [])
+        num_runs = 10
+        if num_runs_input and num_runs_input != 'exit':
+            try:
+                num_runs = int(num_runs_input)
+            except ValueError:
+                print("⚠️ Invalid number, using default (10)")
+        
+        max_iterations_input = self.get_user_input("Max iterations per run (default: 1000)", [])
+        max_iterations = 1000
+        if max_iterations_input and max_iterations_input != 'exit':
+            try:
+                max_iterations = int(max_iterations_input)
+            except ValueError:
+                print("⚠️ Invalid number, using default (1000)")
+        
+        output_dir_input = self.get_user_input("Output directory for reports (optional)", [])
+        output_dir = None
+        if output_dir_input and output_dir_input != 'exit' and output_dir_input.strip():
+            output_dir = output_dir_input.strip()
+            
+        # Create mock args for existing function
+        class MockArgs:
+            def __init__(self, session):
+                self.csv_file = csv_file
+                self.config = session.current_config
+                self.num_runs = num_runs
+                self.max_iterations = max_iterations
+                self.output_dir = output_dir
+                self.output_prefix = 'baseline'
+                self.log_level = 'normal'
+                self.quiet = False
+                self.min_friends = 0
+                self.early_stop = 100
+                self.accept_neutral = False
+                self.force_constraints = True
+                self.random_seed = None
+                
+        args = MockArgs(self)
+        
+        # Execute baseline generation
+        try:
+            generate_baseline_command(args)
+        except Exception as e:
+            print(f"❌ Error during baseline generation: {e}")
+            
     def run(self):
         """Run the interactive CLI session."""
         self.display_header()
@@ -580,7 +643,7 @@ class InteractiveSession:
             elif choice == '6':
                 self.handle_validate_data()
             elif choice == '7':
-                print("🔧 Baseline Test feature coming soon in next update!")
+                self.handle_baseline_test()
             elif choice == '8':
                 print("🔧 Master Solver feature coming soon in next update!")
             elif choice == '9':

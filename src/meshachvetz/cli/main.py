@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 from meshachvetz import __version__
 from .scorer_cli import main as scorer_main
 from .optimizer_cli import main as optimizer_main
+from .baseline_cli import main as baseline_main
 from .config_manager import handle_config_set_command, handle_config_reset_command, handle_config_status_command
 from .interactive_cli import main as interactive_main
 
@@ -28,6 +29,7 @@ Available Commands:
   interactive   Start interactive menu mode (recommended for beginners)
   score         Score a student assignment CSV file
   optimize      Optimize student class assignments
+  baseline      Generate performance baselines using Random Swap algorithm
   generate-assignment   Generate initial class assignments
   validate      Validate a student data CSV file  
   config        Show or manage configuration
@@ -52,6 +54,9 @@ Examples:
 
   # Score with detailed reports
   meshachvetz score students.csv --reports --output results/
+
+  # Generate performance baseline
+  meshachvetz baseline students.csv --output-dir results/
 
   # Use a specific single algorithm
   meshachvetz optimize students.csv --algorithm genetic
@@ -137,6 +142,31 @@ For more help on a specific command:
     optimize_parser.add_argument('--target-classes', type=int,
                                 help='Number of target classes (auto-calculated if not specified)')
     
+    # Baseline command
+    baseline_parser = subparsers.add_parser('baseline', help='Generate performance baselines using Random Swap algorithm')
+    baseline_parser.add_argument('csv_file', help='Path to CSV file containing student data')
+    baseline_parser.add_argument('--num-runs', type=int, default=10,
+                                help='Number of optimization runs to perform (default: 10)')
+    baseline_parser.add_argument('--max-iterations', type=int, default=1000,
+                                help='Maximum iterations per run (default: 1000)')
+    baseline_parser.add_argument('--output-dir', '-o', type=str,
+                                help='Output directory for baseline reports')
+    baseline_parser.add_argument('--output-prefix', type=str, default='baseline',
+                                help='Prefix for output files (default: baseline)')
+    baseline_parser.add_argument('--config', '-c', type=str, help='Path to YAML configuration file')
+    baseline_parser.add_argument('--log-level', choices=['minimal', 'normal', 'detailed', 'debug'],
+                                default='normal', help='Logging level (default: normal)')
+    baseline_parser.add_argument('--quiet', '-q', action='store_true', help='Suppress summary output')
+    baseline_parser.add_argument('--min-friends', type=int, default=0,
+                                help='Minimum friends required per student (default: 0)')
+    baseline_parser.add_argument('--early-stop', type=int, default=100,
+                                help='Early stopping threshold (default: 100)')
+    baseline_parser.add_argument('--accept-neutral', action='store_true',
+                                help='Accept neutral moves (no score change)')
+    baseline_parser.add_argument('--force-constraints', action='store_true', default=True,
+                                help='Respect force_class and force_friend constraints')
+    baseline_parser.add_argument('--random-seed', type=int, help='Random seed for reproducibility')
+    
     # Validate command
     validate_parser = subparsers.add_parser('validate', help='Validate a student data CSV file')
     validate_parser.add_argument('csv_file', help='Path to CSV file to validate')
@@ -193,6 +223,10 @@ For more help on a specific command:
             # Delegate to scorer CLI
             sys.argv = ['scorer_cli.py', args.command] + sys.argv[2:]
             scorer_main()
+        elif args.command == 'baseline':
+            # Handle baseline generation
+            sys.argv = ['baseline_cli.py', 'generate'] + sys.argv[2:]
+            baseline_main()
         elif args.command == 'optimize':
             # Handle both single and multiple algorithm optimization
             if hasattr(args, 'algorithm') and args.algorithm:
@@ -200,55 +234,41 @@ For more help on a specific command:
                 sys.argv = ['optimizer_cli.py', 'optimize'] + sys.argv[2:]
                 optimizer_main()
             else:
-                # Default to multi-algorithm approach with best algorithms
-                algorithms_to_use = args.algorithms  # Will be default list if not specified
-                sys.argv = ['optimizer_cli.py', 'compare', args.csv_file] + [
-                    '--algorithms'] + algorithms_to_use + [
-                    '--strategy', args.strategy,
-                    '--max-iterations', str(args.max_iterations),
-                    '--init-strategy', args.init_strategy,
-                    '--min-friends', str(args.min_friends)
-                ]
-                if args.target_classes:
-                    sys.argv.extend(['--target-classes', str(args.target_classes)])
-                if args.output:
-                    sys.argv.extend(['--output', args.output])
-                if args.verbose:
-                    sys.argv.append('--verbose')
-                if args.quiet:
-                    sys.argv.append('--quiet')
+                # Multiple algorithms - use multi-algorithm mode
+                sys.argv = ['optimizer_cli.py', 'optimize'] + sys.argv[2:]
                 optimizer_main()
+        elif args.command == 'generate-assignment':
+            # Handle assignment generation
+            sys.argv = ['optimizer_cli.py', 'generate-assignment'] + sys.argv[2:]
+            optimizer_main()
         elif args.command == 'config':
+            # Handle configuration commands
             if args.config_command == 'show':
-                # Handle config show
-                sys.argv = ['scorer_cli.py', 'show-config'] + (['--config', args.config] if args.config else [])
+                # Show current configuration
+                sys.argv = ['scorer_cli.py', 'config', 'show'] + sys.argv[3:]
                 scorer_main()
             elif args.config_command == 'set':
-                # Handle config set
                 handle_config_set_command(args.config_file)
             elif args.config_command == 'reset':
-                # Handle config reset
                 handle_config_reset_command()
             elif args.config_command == 'status':
-                # Handle config status
                 handle_config_status_command()
             else:
-                config_parser.print_help()
-                sys.exit(1)
-        elif args.command == 'generate-assignment':
-            # Delegate to optimizer CLI for generation
-            sys.argv = ['optimizer_cli.py', args.command] + sys.argv[2:]
-            optimizer_main()
+                # Default to show if no subcommand
+                sys.argv = ['scorer_cli.py', 'config', 'show'] + sys.argv[2:]
+                scorer_main()
         else:
+            print(f"Unknown command: {args.command}")
             parser.print_help()
             sys.exit(1)
+    
     except KeyboardInterrupt:
-        print("\n⚠️  Operation cancelled by user.")
+        print("\n🛑 Operation cancelled by user")
         sys.exit(1)
     except Exception as e:
         print(f"❌ Error: {e}")
         sys.exit(1)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main() 

@@ -22,6 +22,8 @@ Welcome to the Meshachvetz project documentation! This collection of documents p
 - [CONFIG_MANAGEMENT.md](CONFIG_MANAGEMENT.md) - Advanced configuration set/reset system
 
 ### **📊 Features and Updates**
+- [08_enhanced_iteration_logging.md](08_enhanced_iteration_logging.md) - Enhanced iteration logging system with configurable levels
+- [09_baseline_generator.md](09_baseline_generator.md) - Comprehensive baseline generator for performance benchmarking
 
 ## 🚀 Quick Start Guide
 
