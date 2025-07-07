@@ -121,14 +121,20 @@ class GeneticOptimizer(BaseOptimizer):
         best_fitness_history = [best_individual.fitness]
         generations_without_improvement = 0
         
-        # Track progress for logging
-        log_interval = max(1, effective_generations // 10)  # Log every 10% of generations
+        # Start enhanced logging
+        self.start_optimization(school_data)
         
         for generation in range(effective_generations):
-            # Log progress periodically
-            if generation % log_interval == 0 or generation == effective_generations - 1:
-                self.logger.info(f"Generation {generation + 1}/{effective_generations} - "
-                               f"Best fitness: {best_individual.fitness:.2f}")
+            # Algorithm-specific metrics for enhanced logging
+            additional_metrics = {
+                'population_size': len(population),
+                'best_fitness': best_individual.fitness,
+                'generations_without_improvement': generations_without_improvement,
+                'diversity': self._calculate_diversity(population)
+            }
+            
+            # Update progress with enhanced logging
+            self.update_progress(best_individual.school_data, generation + 1, additional_metrics)
             
             # Selection
             selection_method = self.selection_methods.get(
@@ -173,7 +179,7 @@ class GeneticOptimizer(BaseOptimizer):
                     offspring_attempts += 1
                     
                 except Exception as e:
-                    self.logger.debug(f"Offspring generation failed: {e}")
+                    self.iteration_logger.log_debug(f"Offspring generation failed: {e}")
                     offspring_attempts += 1
             
             # If we couldn't create enough offspring, fill with copies of elite individuals
@@ -194,28 +200,26 @@ class GeneticOptimizer(BaseOptimizer):
                 improvement = current_best.fitness - best_individual.fitness
                 best_individual = copy.deepcopy(current_best)
                 generations_without_improvement = 0
-                self.logger.debug(f"New best fitness: {best_individual.fitness:.3f} (+{improvement:.3f})")
+                self.iteration_logger.log_debug(f"New best fitness: {best_individual.fitness:.3f} (+{improvement:.3f})")
             else:
                 generations_without_improvement += 1
             
             best_fitness_history.append(best_individual.fitness)
             
-            # Update progress tracking
-            self.update_progress(best_individual.school_data, generation + 1)
-            
             # Check convergence
             if generations_without_improvement >= self.convergence_generations:
-                self.logger.info(f"Converged after {generation + 1} generations "
-                               f"({generations_without_improvement} generations without improvement)")
+                self.iteration_logger.log_info(f"Converged after {generation + 1} generations "
+                                             f"({generations_without_improvement} generations without improvement)")
                 break
         
-        # Finalize optimization
+        # Finalize optimization with enhanced logging
         result = self.finish_optimization(best_individual.school_data, generation + 1)
         
-        self.logger.info(f"Genetic Algorithm completed after {generation + 1} generations")
-        self.logger.info(f"Best fitness: {best_individual.fitness:.3f}")
-        self.logger.info(f"Score: {result.initial_score:.2f} → {result.final_score:.2f} "
-                        f"(+{result.improvement:.2f})")
+        # Additional genetic algorithm specific logging
+        self.iteration_logger.log_info(f"Genetic Algorithm completed after {generation + 1} generations")
+        self.iteration_logger.log_info(f"Best fitness: {best_individual.fitness:.3f}")
+        self.iteration_logger.log_info(f"Score: {result.initial_score:.2f} → {result.final_score:.2f} "
+                                     f"(+{result.improvement:.2f})")
         
         return result
     

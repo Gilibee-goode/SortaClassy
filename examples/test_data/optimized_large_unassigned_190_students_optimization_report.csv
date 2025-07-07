@@ -1,0 +1,139 @@
+Optimization Report
+Generated:,2025-07-07 15:27:14
+
+Algorithm:,Genetic Algorithm
+Initial Score:,65.53
+Final Score:,81.60
+Improvement:,16.07
+Improvement %:,24.5%
+Execution Time (seconds):,20.52
+Iterations Completed:,73
+Total Iterations:,1000
+Constraints Satisfied:,No
+
+Algorithm Parameters:
+min_friends,1
+early_stop_threshold,100
+accept_neutral_moves,False
+respect_force_constraints,True
+max_iterations,1000
+default_algorithm,genetic
+log_level,normal
+
+Constraint Violations:
+"Student 200000001 has only 0 friends in class, minimum required: 1"
+"Student 200000002 has only 0 friends in class, minimum required: 1"
+"Student 200000009 has only 0 friends in class, minimum required: 1"
+"Student 200000020 has only 0 friends in class, minimum required: 1"
+"Student 200000028 has only 0 friends in class, minimum required: 1"
+"Student 200000039 has only 0 friends in class, minimum required: 1"
+"Student 200000040 has only 0 friends in class, minimum required: 1"
+"Student 200000041 has only 0 friends in class, minimum required: 1"
+"Student 200000052 has only 0 friends in class, minimum required: 1"
+"Student 200000057 has only 0 friends in class, minimum required: 1"
+"Student 200000063 has only 0 friends in class, minimum required: 1"
+"Student 200000064 has only 0 friends in class, minimum required: 1"
+"Student 200000065 has only 0 friends in class, minimum required: 1"
+"Student 200000076 has only 0 friends in class, minimum required: 1"
+"Student 200000089 has only 0 friends in class, minimum required: 1"
+"Student 200000097 has only 0 friends in class, minimum required: 1"
+"Student 200000105 has only 0 friends in class, minimum required: 1"
+"Student 200000107 has only 0 friends in class, minimum required: 1"
+"Student 200000108 has only 0 friends in class, minimum required: 1"
+"Student 200000112 has only 0 friends in class, minimum required: 1"
+"Student 200000116 has only 0 friends in class, minimum required: 1"
+"Student 200000119 has only 0 friends in class, minimum required: 1"
+"Student 200000120 has only 0 friends in class, minimum required: 1"
+"Student 200000121 has only 0 friends in class, minimum required: 1"
+"Student 200000132 has only 0 friends in class, minimum required: 1"
+"Student 200000135 has only 0 friends in class, minimum required: 1"
+"Student 200000136 has only 0 friends in class, minimum required: 1"
+"Student 200000137 has only 0 friends in class, minimum required: 1"
+"Student 200000139 has only 0 friends in class, minimum required: 1"
+"Student 200000140 has only 0 friends in class, minimum required: 1"
+"Student 200000145 has only 0 friends in class, minimum required: 1"
+"Student 200000147 has only 0 friends in class, minimum required: 1"
+"Student 200000148 has only 0 friends in class, minimum required: 1"
+"Student 200000153 has only 0 friends in class, minimum required: 1"
+"Student 200000155 has only 0 friends in class, minimum required: 1"
+"Student 200000156 has only 0 friends in class, minimum required: 1"
+"Student 200000164 has only 0 friends in class, minimum required: 1"
+"Student 200000176 has only 0 friends in class, minimum required: 1"
+"Student 200000179 has only 0 friends in class, minimum required: 1"
+"Student 200000180 has only 0 friends in class, minimum required: 1"
+
+Optimization History:
+Iteration,Score,Improvement
+0,65.53,1.53
+1,67.05,0.07
+2,67.12,0.17
+3,67.29,0.77
+4,68.05,1.01
+5,69.07,0.40
+6,69.46,0.17
+7,69.64,0.95
+8,70.58,0.77
+9,71.35,0.11
+10,71.46,0.99
+11,72.45,0.00
+12,72.45,0.08
+13,72.53,0.31
+14,72.84,0.22
+15,73.06,0.23
+16,73.28,0.33
+17,73.61,0.60
+18,74.21,0.00
+19,74.21,0.02
+20,74.23,0.12
+21,74.35,0.10
+22,74.45,0.13
+23,74.58,0.00
+24,74.58,0.39
+25,74.97,0.06
+26,75.04,0.41
+27,75.45,0.16
+28,75.61,0.17
+29,75.78,0.55
+30,76.33,0.17
+31,76.50,0.18
+32,76.68,0.25
+33,76.93,0.34
+34,77.27,0.31
+35,77.58,0.09
+36,77.67,0.00
+37,77.67,0.12
+38,77.79,0.28
+39,78.07,0.00
+40,78.07,0.00
+41,78.07,0.05
+42,78.12,0.17
+43,78.29,0.00
+44,78.29,0.36
+45,78.64,0.51
+46,79.15,0.00
+47,79.15,0.03
+48,79.19,0.57
+49,79.76,0.00
+50,79.76,0.32
+51,80.08,0.00
+52,80.08,0.01
+53,80.09,0.15
+54,80.24,0.00
+55,80.24,0.02
+56,80.26,0.04
+57,80.30,0.00
+58,80.30,0.03
+59,80.33,0.00
+60,80.33,0.00
+61,80.33,0.00
+62,80.33,0.49
+63,80.82,0.15
+64,80.96,0.23
+65,81.19,0.23
+66,81.42,0.16
+67,81.58,0.00
+68,81.58,0.02
+69,81.60,0.00
+70,81.60,0.00
+71,81.60,0.00
+72,81.60,0.00

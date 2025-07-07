@@ -6,12 +6,13 @@ for optimization algorithms.
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Tuple
 import time
 import logging
 from datetime import datetime
 
-from ..data.models import SchoolData
+from ..data.models import SchoolData, Student
+from meshachvetz.utils.logging import IterationLogger, LogLevel, create_iteration_logger
 
 
 @dataclass
@@ -103,7 +104,11 @@ class BaseOptimizer(ABC):
         self.config = config or {}
         self.logger = logging.getLogger(self.__class__.__name__)
         
-        # Progress tracking
+        # Enhanced iteration logging
+        log_level = self.config.get('log_level', 'normal')
+        self.iteration_logger = create_iteration_logger(log_level, self.__class__.__name__)
+        
+        # Progress tracking (for backward compatibility)
         self.current_iteration = 0
         self.best_score = -1
         self.score_history = []
@@ -250,18 +255,25 @@ class BaseOptimizer(ABC):
         self.best_score = initial_score
         self.score_history.append(initial_score)
         
+        # Use enhanced iteration logging
+        max_iterations = self.config.get('max_iterations', 1000)
+        self.iteration_logger.start_optimization(initial_score, max_iterations)
+        
+        # Legacy logging for backward compatibility
         self.logger.info(f"Starting {self.get_algorithm_name()} optimization")
         self.logger.info(f"Initial score: {initial_score:.2f}")
         
         return initial_score
     
-    def update_progress(self, school_data: SchoolData, iteration: int) -> float:
+    def update_progress(self, school_data: SchoolData, iteration: int, 
+                       additional_metrics: Optional[Dict[str, Any]] = None) -> float:
         """
-        Update progress tracking.
+        Update progress tracking with enhanced logging.
         
         Args:
             school_data: Current school data
             iteration: Current iteration number
+            additional_metrics: Additional algorithm-specific metrics
             
         Returns:
             Current score
@@ -270,15 +282,19 @@ class BaseOptimizer(ABC):
         current_score = self.evaluate_solution(school_data)
         self.score_history.append(current_score)
         
+        # Track best score for legacy compatibility
         if current_score > self.best_score:
             self.best_score = current_score
             self.logger.debug(f"Iteration {iteration}: New best score {current_score:.2f}")
+        
+        # Use enhanced iteration logging
+        self.iteration_logger.log_iteration(iteration, current_score, additional_metrics)
         
         return current_score
     
     def finish_optimization(self, school_data: SchoolData, total_iterations: int) -> OptimizationResult:
         """
-        Finalize optimization and create result.
+        Finalize optimization and create result with enhanced logging.
         
         Args:
             school_data: Final optimized school data
@@ -294,44 +310,44 @@ class BaseOptimizer(ABC):
         initial_score = self.score_history[0] if self.score_history else 0
         improvement = final_score - initial_score
         
+        # Use enhanced iteration logging
+        self.iteration_logger.finish_optimization(final_score, total_iterations)
+        
         # Validate final solution
         is_valid, violations = self.is_valid_solution(school_data)
         
-        # Calculate improvement history
-        improvement_history = [score - initial_score for score in self.score_history]
-        
-        # Find convergence point
-        convergence_iteration = None
-        if len(self.score_history) > 1:
-            best_score = max(self.score_history)
-            for i, score in enumerate(self.score_history):
-                if score == best_score:
-                    convergence_iteration = i
-                    break
-        
+        # Create optimization result
         result = OptimizationResult(
             optimized_school_data=school_data,
             initial_score=initial_score,
             final_score=final_score,
             improvement=improvement,
             algorithm_name=self.get_algorithm_name(),
-            algorithm_parameters=self.config.copy(),
+            algorithm_parameters=self.config,
             execution_time=execution_time,
-            iterations_completed=self.current_iteration,
-            total_iterations=total_iterations,
+            iterations_completed=total_iterations,
+            total_iterations=self.config.get('max_iterations', total_iterations),
             score_history=self.score_history.copy(),
-            improvement_history=improvement_history,
+            improvement_history=[],
             constraints_satisfied=is_valid,
             constraint_violations=violations,
-            convergence_iteration=convergence_iteration,
-            best_score_achieved=max(self.score_history) if self.score_history else final_score
+            best_score_achieved=self.best_score
         )
         
-        self.logger.info(f"Optimization completed in {execution_time:.2f} seconds")
-        self.logger.info(f"Final score: {final_score:.2f} (improvement: +{improvement:.2f})")
+        # Calculate improvement history
+        if len(self.score_history) > 1:
+            improvement_history = []
+            for i in range(1, len(self.score_history)):
+                improvement = self.score_history[i] - self.score_history[i-1]
+                improvement_history.append(improvement)
+            result.improvement_history = improvement_history
         
-        if not is_valid:
-            self.logger.warning(f"Final solution violates {len(violations)} constraints")
+        # Find convergence iteration
+        if len(self.score_history) > 1:
+            for i in range(len(self.score_history) - 1, 0, -1):
+                if abs(self.score_history[i] - self.best_score) < 0.01:
+                    result.convergence_iteration = i
+                    break
         
         return result
     

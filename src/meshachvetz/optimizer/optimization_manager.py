@@ -138,7 +138,7 @@ class OptimizationManager:
         self.logger.info(f"Max iterations: {max_iterations}")
         self.logger.info(f"Configuration: {merged_config}")
         
-        # Create optimizer instance
+        # Create optimizer instance with log level configuration
         optimizer_class = self.algorithms[algorithm]
         optimizer = optimizer_class(self.scorer, merged_config)
         

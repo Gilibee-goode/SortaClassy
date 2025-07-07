@@ -77,104 +77,82 @@ Examples:
     # Add subcommands
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
     
-    # Optimize command
-    optimize_parser = subparsers.add_parser('optimize', help='Optimize student class assignments')
-    optimize_parser.add_argument('csv_file', type=validate_file_exists, 
-                                help='Path to CSV file containing student data')
-    optimize_parser.add_argument('--output', '-o', type=str, 
-                                help='Output file for optimized assignment (default: optimized_<input_file>)')
-    optimize_parser.add_argument('--output-dir', type=validate_output_dir, 
-                                help='Output directory for all generated files')
-    optimize_parser.add_argument('--algorithm', '-a', type=str, 
-                                choices=['random_swap', 'local_search', 'simulated_annealing', 'genetic', 'or_tools'],
-                                default='local_search',
-                                help='Optimization algorithm to use (default: local_search)')
-    optimize_parser.add_argument('--max-iterations', type=int, default=1000,
-                                help='Maximum number of optimization iterations (default: 1000)')
-    optimize_parser.add_argument('--config', '-c', type=str, 
-                                help='Path to YAML configuration file')
-    optimize_parser.add_argument('--reports', '-r', action='store_true', 
-                                help='Generate detailed reports')
-    optimize_parser.add_argument('--detailed', '-d', action='store_true', 
-                                help='Show detailed optimization progress')
-    optimize_parser.add_argument('--verbose', '-v', action='store_true', 
-                                help='Enable verbose logging')
-    optimize_parser.add_argument('--quiet', '-q', action='store_true', 
-                                help='Suppress non-essential output')
-    optimize_parser.add_argument('--compare-algorithms', action='store_true',
-                                help='Compare multiple algorithms (future feature)')
-    
-    # Initialization options
-    optimize_parser.add_argument('--init-strategy', type=str, 
-                                choices=['random', 'balanced', 'constraint_aware', 'academic_balanced'],
-                                default='constraint_aware',
-                                help='Initialization strategy for unassigned students (default: constraint_aware)')
-    optimize_parser.add_argument('--no-auto-init', action='store_true',
-                                help='Disable automatic initialization of unassigned students')
-    optimize_parser.add_argument('--target-classes', type=int, default=5,
-                                help='Number of target classes (default: 5, auto-calculated if set to 0)')
-    
-    # Optimizer-specific options
-    optimize_parser.add_argument('--min-friends', type=int, default=1,
-                                help='Minimum friends required per student (default: 1, use 0 to disable)')
-    optimize_parser.add_argument('--early-stop', type=int, default=100,
-                                help='Early stopping threshold (iterations without improvement)')
-    optimize_parser.add_argument('--accept-neutral', action='store_true',
-                                help='Accept neutral moves (no score change)')
-    optimize_parser.add_argument('--force-constraints', action='store_true', default=True,
-                                help='Respect force_class and force_friend constraints')
+    # Optimize subcommand
+    optimize_parser = subparsers.add_parser(
+        'optimize',
+        help='Optimize student assignment using various algorithms',
+        description='Optimize student class assignments to maximize satisfaction and balance.'
+    )
+    optimize_parser.add_argument('csv_file', help='CSV file with student data')
+    optimize_parser.add_argument('--algorithm', '-a', choices=['random_swap', 'local_search', 'simulated_annealing', 'genetic', 'or_tools'], 
+                                default='local_search', help='Optimization algorithm to use')
+    optimize_parser.add_argument('--max-iterations', '-i', type=int, default=1000, 
+                                help='Maximum number of optimization iterations')
+    optimize_parser.add_argument('--config', '-c', type=str, help='Configuration file path')
+    optimize_parser.add_argument('--output', '-o', type=str, help='Output file path')
+    optimize_parser.add_argument('--output-dir', type=str, help='Output directory path')
+    optimize_parser.add_argument('--reports', '-r', action='store_true', help='Generate detailed reports')
+    optimize_parser.add_argument('--detailed', '-d', action='store_true', help='Show detailed optimization statistics')
+    optimize_parser.add_argument('--min-friends', type=int, default=1, help='Minimum friends required per student')
+    optimize_parser.add_argument('--early-stop', type=float, default=0.1, help='Early stopping threshold')
+    optimize_parser.add_argument('--accept-neutral', action='store_true', help='Accept neutral moves in optimization')
+    optimize_parser.add_argument('--force-constraints', action='store_true', default=True, help='Respect force constraints')
+    optimize_parser.add_argument('--init-strategy', choices=['random', 'balanced', 'academic', 'social'], 
+                                default='balanced', help='Initialization strategy for unassigned students')
+    optimize_parser.add_argument('--no-auto-init', action='store_true', help='Disable automatic initialization')
+    optimize_parser.add_argument('--target-classes', type=int, default=0, help='Target number of classes (0 for auto)')
+    optimize_parser.add_argument('--verbose', '-v', action='store_true',
+                                help='Enable verbose logging (legacy - use --log-level debug instead)')
+    optimize_parser.add_argument('--log-level', choices=['minimal', 'normal', 'detailed', 'debug'], 
+                                default='normal', help='Set logging level for optimization progress')
+    optimize_parser.add_argument('--quiet', '-q', action='store_true', help='Suppress output')
     
     # List algorithms command
     list_parser = subparsers.add_parser('list-algorithms', help='List available optimization algorithms')
     
-    # Generate assignment command
-    generate_parser = subparsers.add_parser('generate-assignment', help='Generate initial class assignments')
-    generate_parser.add_argument('csv_file', type=validate_file_exists,
-                                help='Path to CSV file containing student data')
-    generate_parser.add_argument('--output', '-o', type=str,
-                                help='Output file for generated assignment (default: assignment_<input_file>)')
-    generate_parser.add_argument('--output-dir', type=validate_output_dir,
-                                help='Output directory for generated files')
-    generate_parser.add_argument('--strategy', '-s', type=str,
-                                choices=['random', 'balanced', 'constraint_aware', 'academic_balanced'],
-                                default='constraint_aware',
-                                help='Assignment generation strategy (default: constraint_aware)')
-    generate_parser.add_argument('--target-classes', type=int, default=5,
-                                help='Number of target classes (default: 5, auto-calculated if set to 0)')
-    generate_parser.add_argument('--config', '-c', type=str,
-                                help='Path to YAML configuration file')
+    # Generate assignment subcommand
+    generate_parser = subparsers.add_parser(
+        'generate-assignment',
+        help='Generate initial assignment for unassigned students',
+        description='Generate initial class assignments for students without assignments.'
+    )
+    generate_parser.add_argument('csv_file', help='CSV file with student data')
+    generate_parser.add_argument('--strategy', choices=['random', 'balanced', 'academic', 'social'], 
+                                default='balanced', help='Assignment generation strategy')
+    generate_parser.add_argument('--target-classes', type=int, default=0, help='Target number of classes (0 for auto)')
+    generate_parser.add_argument('--config', '-c', type=str, help='Configuration file path')
+    generate_parser.add_argument('--output', '-o', type=str, help='Output file path')
+    generate_parser.add_argument('--output-dir', type=str, help='Output directory path')
     generate_parser.add_argument('--verbose', '-v', action='store_true',
-                                help='Enable verbose logging')
-    generate_parser.add_argument('--quiet', '-q', action='store_true',
-                                help='Suppress non-essential output')
+                                help='Enable verbose logging (legacy - use --log-level debug instead)')
+    generate_parser.add_argument('--log-level', choices=['minimal', 'normal', 'detailed', 'debug'], 
+                                default='normal', help='Set logging level for generation progress')
+    generate_parser.add_argument('--quiet', '-q', action='store_true', help='Suppress output')
     
-    # Add compare command
-    compare_parser = subparsers.add_parser('compare', help='Compare multiple optimization algorithms')
-    compare_parser.add_argument('input_file', type=str, help='Input CSV file with student data')
+    # Compare algorithms subcommand
+    compare_parser = subparsers.add_parser(
+        'compare-algorithms',
+        help='Compare different optimization algorithms',
+        description='Compare the performance of different optimization algorithms.'
+    )
+    compare_parser.add_argument('input_file', help='Input CSV file with student data')
     compare_parser.add_argument('--algorithms', nargs='+', 
                                choices=['random_swap', 'local_search', 'simulated_annealing', 'genetic', 'or_tools'],
                                default=['random_swap', 'local_search', 'simulated_annealing', 'genetic'],
-                               help='Algorithms to compare (default: all)')
-    compare_parser.add_argument('--max-iterations', type=int, default=500,
-                               help='Maximum iterations per algorithm (default: 500)')
-    compare_parser.add_argument('--output', '-o', type=str,
-                               help='Output file for comparison report (CSV format)')
-    compare_parser.add_argument('--strategy', type=str,
-                               choices=['parallel', 'sequential', 'best_of'],
-                               default='parallel',
-                               help='Multi-algorithm strategy (default: parallel)')
-    compare_parser.add_argument('--init-strategy', type=str,
-                               choices=['random', 'balanced', 'constraint_aware', 'academic_balanced'],
-                               default='constraint_aware',
-                               help='Initialization strategy for unassigned students (default: constraint_aware)')
-    compare_parser.add_argument('--target-classes', type=int, default=5,
-                               help='Number of target classes (default: 5, auto-calculated if set to 0)')
-    compare_parser.add_argument('--min-friends', type=int, default=1,
-                               help='Minimum friends constraint (default: 1)')
+                               help='Algorithms to compare')
+    compare_parser.add_argument('--max-iterations', type=int, default=1000, help='Max iterations per algorithm')
+    compare_parser.add_argument('--strategy', choices=['compare', 'parallel', 'sequential', 'best_of'], 
+                               default='compare', help='Comparison strategy')
+    compare_parser.add_argument('--output', '-o', type=str, help='Output file for detailed comparison report')
+    compare_parser.add_argument('--min-friends', type=int, default=1, help='Minimum friends required per student')
+    compare_parser.add_argument('--init-strategy', choices=['random', 'balanced', 'academic', 'social'], 
+                               default='balanced', help='Initialization strategy for unassigned students')
+    compare_parser.add_argument('--target-classes', type=int, default=0, help='Target number of classes (0 for auto)')
     compare_parser.add_argument('--verbose', '-v', action='store_true',
-                               help='Enable verbose output')
-    compare_parser.add_argument('--quiet', '-q', action='store_true',
-                               help='Minimal output')
+                                help='Enable verbose output (legacy - use --log-level debug instead)')
+    compare_parser.add_argument('--log-level', choices=['minimal', 'normal', 'detailed', 'debug'], 
+                                default='normal', help='Set logging level for comparison progress')
+    compare_parser.add_argument('--quiet', '-q', action='store_true', help='Suppress output')
 
     # Parse arguments
     args = parser.parse_args()
@@ -184,11 +162,14 @@ Examples:
         parser.print_help()
         sys.exit(1)
     
-    # Set up logging
+    # Configure logging based on arguments
     if hasattr(args, 'verbose') and args.verbose:
-        setup_logging("DEBUG")
-    elif hasattr(args, 'quiet') and args.quiet:
-        setup_logging("WARNING")
+        # Legacy verbose flag - map to debug level
+        args.log_level = 'debug'
+    
+    if hasattr(args, 'log_level'):
+        # Set log level for enhanced iteration logging
+        setup_logging("DEBUG" if args.log_level == 'debug' else "INFO" if args.log_level == 'detailed' else "WARNING")
     else:
         setup_logging("WARNING")  # Default to WARNING, only show INFO with --verbose
     
@@ -199,7 +180,7 @@ Examples:
             handle_list_algorithms_command(args)
         elif args.command == 'generate-assignment':
             handle_generate_assignment_command(args)
-        elif args.command == 'compare':
+        elif args.command == 'compare-algorithms':
             handle_compare_command(args)
         else:
             parser.print_help()
@@ -218,6 +199,10 @@ def handle_optimize_command(args):
     print("🎯 Meshachvetz Optimizer")
     print("=" * 40)
     
+    # Handle legacy verbose flag
+    if hasattr(args, 'verbose') and args.verbose:
+        args.log_level = 'debug'
+    
     # Load configuration
     config = Config()
     if args.config:
@@ -229,14 +214,15 @@ def handle_optimize_command(args):
     # Create scorer
     scorer = Scorer(config)
     
-    # Create optimization manager with algorithm-specific config
+    # Create optimization manager with algorithm-specific config including log level
     optimizer_config = {
         'min_friends': args.min_friends,
         'early_stop_threshold': args.early_stop,
         'accept_neutral_moves': args.accept_neutral,
         'respect_force_constraints': args.force_constraints,
         'max_iterations': args.max_iterations,
-        'default_algorithm': args.algorithm
+        'default_algorithm': args.algorithm,
+        'log_level': getattr(args, 'log_level', 'normal')  # Add log level configuration
     }
     
     optimization_manager = OptimizationManager(scorer, optimizer_config)
@@ -268,6 +254,13 @@ def handle_optimize_command(args):
     if args.output_dir:
         output_path = Path(args.output_dir)
         output_file = str(output_path / Path(output_file).name)
+    
+    # Show logging level information
+    if not args.quiet:
+        print(f"📋 Optimization settings:")
+        print(f"   Algorithm: {args.algorithm}")
+        print(f"   Max iterations: {args.max_iterations:,}")
+        print(f"   Log level: {getattr(args, 'log_level', 'normal')}")
     
     print(f"🚀 Starting optimization with {args.algorithm} algorithm...")
     
@@ -343,7 +336,7 @@ def handle_optimize_command(args):
             
     except Exception as e:
         print(f"❌ Optimization failed: {e}")
-        if args.verbose:
+        if getattr(args, 'log_level', 'normal') == 'debug':
             import traceback
             traceback.print_exc()
         sys.exit(1)

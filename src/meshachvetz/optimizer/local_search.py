@@ -32,11 +32,15 @@ class LocalSearchOptimizer(BaseOptimizer):
         """
         super().__init__(scorer, config)
         
-        # Algorithm-specific parameters
-        self.max_passes = self.config.get('max_passes', 10)
-        self.min_improvement = self.config.get('min_improvement', 0.01)
-        self.shuffle_students = self.config.get('shuffle_students', True)
-        self.greedy_mode = self.config.get('greedy_mode', True)  # Take first improvement vs best improvement
+        # Optimization parameters from config
+        self.max_passes = config.get('max_passes', 10)
+        self.min_improvement = config.get('min_improvement', 0.01)
+        self.shuffle_students = config.get('shuffle_students', True)
+        self.greedy_mode = config.get('greedy_mode', True)
+        self.min_passes = config.get('min_passes', 2)
+        self.min_improvement_threshold = config.get('min_improvement_threshold', 0.01)
+        self.early_stop_threshold = config.get('early_stop_threshold', 100)
+        self.accept_neutral_moves = config.get('accept_neutral_moves', False)
         
         self.logger = logging.getLogger(__name__)
     
@@ -59,74 +63,120 @@ class LocalSearchOptimizer(BaseOptimizer):
         self.logger.info(f"Parameters: max_passes={self.max_passes}, min_improvement={self.min_improvement}")
         
         # Initialize optimization tracking
+        self.start_optimization(school_data)
+        
         current_solution = copy.deepcopy(school_data)
-        current_score = self.start_optimization(current_solution)
+        current_score = self.evaluate_solution(current_solution)
+        best_solution = copy.deepcopy(current_solution)
+        best_score = current_score
         
-        # Limit iterations by max_passes parameter rather than max_iterations
-        effective_max_iterations = min(max_iterations, self.max_passes)
+        no_improvement_count = 0
+        total_moves_attempted = 0
+        successful_moves = 0
         
-        students_list = list(current_solution.students.values())
-        total_improvements = 0
-        passes_without_improvement = 0
-        
-        for pass_num in range(effective_max_iterations):
-            self.logger.debug(f"Starting pass {pass_num + 1}/{effective_max_iterations}")
+        # Multi-pass local search
+        for pass_num in range(self.max_passes):
+            pass_start_score = current_score
             
-            # Shuffle students order for each pass to avoid bias
-            if self.shuffle_students:
-                random.shuffle(students_list)
-            
-            pass_improvements = 0
-            best_pass_improvement = 0
-            
-            for student in students_list:
-                # Skip students with force constraints
-                if (self.respect_force_constraints and 
-                    student.force_class and student.force_class.strip()):
-                    continue
+            # Search within this pass
+            for iteration in range(max_iterations // self.max_passes):
+                total_iteration = pass_num * (max_iterations // self.max_passes) + iteration
                 
-                # Try moving student to each other class
-                best_move = self._find_best_move(student, current_solution)
+                # Algorithm-specific metrics for enhanced logging
+                additional_metrics = {
+                    'pass_number': pass_num + 1,
+                    'total_passes': self.max_passes,
+                    'moves_attempted': total_moves_attempted,
+                    'successful_moves': successful_moves,
+                    'success_rate': (successful_moves / max(1, total_moves_attempted)) * 100,
+                    'no_improvement_count': no_improvement_count
+                }
                 
-                if best_move:
-                    target_class, improvement = best_move
+                # Update progress with enhanced logging
+                self.update_progress(current_solution, total_iteration + 1, additional_metrics)
+                
+                # Try to find a better solution
+                improved = False
+                
+                # Get all students for random selection
+                student_ids = list(current_solution.students.keys())
+                random.shuffle(student_ids)
+                
+                # Try moves until we find improvement or exhaust attempts
+                move_attempts = 0
+                max_move_attempts = min(50, len(student_ids))
+                
+                while not improved and move_attempts < max_move_attempts:
+                    student_id = student_ids[move_attempts % len(student_ids)]
+                    student = current_solution.students[student_id]
                     
-                    if improvement >= self.min_improvement:
-                        # Make the move
-                        self._move_student(current_solution, student, target_class)
-                        current_score += improvement
-                        pass_improvements += 1
-                        total_improvements += 1
-                        best_pass_improvement = max(best_pass_improvement, improvement)
-                        
-                        self.logger.debug(f"Moved student {student.student_id} to {target_class}, "
-                                        f"improvement: +{improvement:.3f}")
-                        
-                        # In greedy mode, take first improvement; otherwise continue to find best
-                        if self.greedy_mode:
-                            break
-            
-            # Update progress tracking
-            self.update_progress(current_solution, pass_num + 1)
-            
-            self.logger.debug(f"Pass {pass_num + 1} complete: {pass_improvements} improvements, "
-                            f"best: +{best_pass_improvement:.3f}")
-            
-            # Check for convergence
-            if pass_improvements == 0:
-                passes_without_improvement += 1
-                if passes_without_improvement >= 2:  # Stop after 2 passes without improvement
-                    self.logger.info(f"Converged after {pass_num + 1} passes")
+                    # Try moving this student to different classes
+                    target_classes = list(current_solution.classes.keys())
+                    random.shuffle(target_classes)
+                    
+                    for target_class in target_classes:
+                        if target_class != student.class_id:
+                            total_moves_attempted += 1
+                            
+                            # Check if move is valid
+                            if self._can_move_student(student, target_class, current_solution):
+                                # Make the move
+                                candidate_solution = self._make_move(current_solution, student, target_class)
+                                candidate_score = self.evaluate_solution(candidate_solution)
+                                
+                                # Accept improvement or neutral moves (if enabled)
+                                if (candidate_score > current_score or 
+                                    (self.accept_neutral_moves and candidate_score == current_score)):
+                                    
+                                    current_solution = candidate_solution
+                                    current_score = candidate_score
+                                    successful_moves += 1
+                                    improved = True
+                                    
+                                    # Track best solution
+                                    if current_score > best_score:
+                                        best_solution = copy.deepcopy(current_solution)
+                                        best_score = current_score
+                                        no_improvement_count = 0
+                                        
+                                        self.iteration_logger.log_debug(f"New best score: {best_score:.2f} "
+                                                                       f"(move: {student_id} -> {target_class})")
+                                    
+                                    break
+                    
+                    move_attempts += 1
+                
+                # Track stagnation
+                if not improved:
+                    no_improvement_count += 1
+                
+                # Early termination check
+                if not self.should_continue(total_iteration + 1, max_iterations, no_improvement_count):
+                    self.iteration_logger.log_info(f"Early termination at iteration {total_iteration + 1}")
                     break
-            else:
-                passes_without_improvement = 0
+            
+            # Pass completion check
+            pass_improvement = current_score - pass_start_score
+            if pass_improvement < self.min_improvement_threshold:
+                self.iteration_logger.log_info(f"Pass {pass_num + 1} completed with minimal improvement "
+                                             f"({pass_improvement:.3f})")
+                if pass_num >= self.min_passes - 1:  # Ensure minimum passes
+                    break
+            
+            # Check if we should continue to next pass
+            if no_improvement_count >= self.early_stop_threshold:
+                self.iteration_logger.log_info(f"Early stopping after pass {pass_num + 1}")
+                break
         
-        # Finalize optimization
-        result = self.finish_optimization(current_solution, pass_num + 1)
+        # Finalize optimization with enhanced logging
+        total_iterations = min(max_iterations, (pass_num + 1) * (max_iterations // self.max_passes))
+        result = self.finish_optimization(best_solution, total_iterations)
         
-        self.logger.info(f"Local Search completed: {total_improvements} total improvements")
-        self.logger.info(f"Score: {result.initial_score:.2f} → {result.final_score:.2f} "
-                        f"(+{result.improvement:.2f})")
+        # Additional local search specific logging
+        self.iteration_logger.log_info(f"Local Search completed after {total_iterations} iterations")
+        self.iteration_logger.log_info(f"Total moves attempted: {total_moves_attempted}")
+        self.iteration_logger.log_info(f"Successful moves: {successful_moves}")
+        self.iteration_logger.log_info(f"Success rate: {(successful_moves / max(1, total_moves_attempted)) * 100:.1f}%")
         
         return result
     
@@ -234,6 +284,29 @@ class LocalSearchOptimizer(BaseOptimizer):
         
         # Update the student in the main students dict
         school_data.students[student.student_id] = student
+    
+    def _make_move(self, school_data: SchoolData, student: Student, target_class: str) -> SchoolData:
+        """
+        Create a copy of school data with a student moved to a target class.
+        
+        Args:
+            school_data: Original school data
+            student: Student to move
+            target_class: Target class ID
+            
+        Returns:
+            New SchoolData with the move applied
+        """
+        # Create a deep copy to avoid modifying the original
+        candidate_solution = copy.deepcopy(school_data)
+        
+        # Get the student copy from the new solution
+        student_copy = candidate_solution.students[student.student_id]
+        
+        # Move the student in the copy
+        self._move_student(candidate_solution, student_copy, target_class)
+        
+        return candidate_solution
     
     def get_algorithm_parameters(self) -> Dict[str, Any]:
         """Get current algorithm parameters for reporting."""

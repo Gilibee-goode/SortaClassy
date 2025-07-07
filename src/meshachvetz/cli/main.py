@@ -82,7 +82,9 @@ For more help on a specific command:
     score_parser.add_argument('--reports', '-r', action='store_true', help='Generate CSV reports')
     score_parser.add_argument('--output', '-o', type=str, help='Output directory for reports')
     score_parser.add_argument('--detailed', '-d', action='store_true', help='Show detailed statistics')
-    score_parser.add_argument('--verbose', '-v', action='store_true', help='Enable verbose logging')
+    score_parser.add_argument('--verbose', '-v', action='store_true', help='Enable verbose logging (legacy - use --log-level debug instead)')
+    score_parser.add_argument('--log-level', choices=['minimal', 'normal', 'detailed', 'debug'], 
+                             default='normal', help='Set logging level for scoring progress')
     score_parser.add_argument('--quiet', '-q', action='store_true', help='Suppress non-essential output')
     
     # Optimize command (now handles both single and multiple algorithms)
@@ -113,7 +115,9 @@ For more help on a specific command:
     optimize_parser.add_argument('--config', '-c', type=str, help='Path to YAML configuration file')
     optimize_parser.add_argument('--reports', '-r', action='store_true', help='Generate detailed reports')
     optimize_parser.add_argument('--detailed', '-d', action='store_true', help='Show detailed optimization progress')
-    optimize_parser.add_argument('--verbose', '-v', action='store_true', help='Enable verbose logging')
+    optimize_parser.add_argument('--verbose', '-v', action='store_true', help='Enable verbose logging (legacy - use --log-level debug instead)')
+    optimize_parser.add_argument('--log-level', choices=['minimal', 'normal', 'detailed', 'debug'], 
+                                default='normal', help='Set logging level for optimization progress')
     optimize_parser.add_argument('--quiet', '-q', action='store_true', help='Suppress non-essential output')
     optimize_parser.add_argument('--min-friends', type=int, default=1,
                                 help='Minimum friends required per student (default: 1, use 0 to disable)')
