@@ -1,0 +1,321 @@
+# Week 6 Enhanced Optimizer Configuration for Meshachvetz
+# Complete optimization suite with all algorithms and advanced configuration options
+
+# Meta information
+meta:
+  name: "Week 6 Enhanced Optimizer"
+  description: "Complete optimization suite with all algorithms and advanced features"
+  version: "1.0.0"
+  created_for: "Week 6 implementation"
+  author: "Meshachvetz Team"
+  
+# Multi-algorithm optimization setup
+optimization:
+  # Default algorithm for single-algorithm optimization
+  default_algorithm: "genetic"
+  
+  # Multi-algorithm strategy when using multiple algorithms
+  strategy: "best_of"  # Options: single, sequential, parallel, best_of
+  
+  # Algorithm configurations - all 5 algorithms available
+  algorithms:
+    random_swap:
+      enabled: true
+      description: "Fast exploration with random student exchanges"
+      parameters:
+        max_iterations: 1000
+        early_stop_threshold: 100
+        accept_neutral_moves: false
+        max_swap_attempts: 50
+        
+    local_search:
+      enabled: true
+      description: "Systematic greedy improvement with convergence detection"
+      parameters:
+        max_passes: 10
+        min_improvement: 0.01
+        exhaustive_search: false
+        
+    simulated_annealing:
+      enabled: true
+      description: "Temperature-based optimization with cooling schedules"
+      parameters:
+        initial_temperature: 100.0
+        cooling_rate: 0.95
+        min_temperature: 0.1
+        cooling_schedule: "exponential"  # Options: linear, exponential, logarithmic
+        reheat_threshold: 50  # Reheat after no improvement for N iterations
+        
+    genetic:
+      enabled: true
+      description: "Population-based evolution with crossover and mutation"
+      parameters:
+        population_size: 50
+        generations: 100
+        mutation_rate: 0.1
+        crossover_rate: 0.8
+        elite_size: 5
+        selection_method: "tournament"  # Options: tournament, roulette, rank
+        tournament_size: 3
+        convergence_generations: 10
+        diversity_penalty: 0.1
+        
+    or_tools:
+      enabled: true
+      description: "Constraint programming for optimal solutions (best for <200 students)"
+      parameters:
+        time_limit_seconds: 300
+        target_class_size: 25
+        class_size_tolerance: 3
+        friend_weight: 10
+        conflict_penalty: 20
+        balance_weight: 5
+        optimize_for_feasibility: false
+        enable_preprocessing: true
+
+# Comprehensive constraint handling
+constraints:
+  # Minimum friends constraint system
+  minimum_friends:
+    default: 1                    # Default minimum friends per student
+    allow_override: true          # Can be overridden via CLI
+    max_allowed: 3                # Maximum constraint value
+    strict_enforcement: false     # Whether to fail if constraint cannot be satisfied
+    
+  # Force constraint handling
+  force_constraints:
+    respect_force_class: true     # Honor force_class assignments
+    respect_force_friend: true    # Honor force_friend groups
+    validate_force_classes: true  # Validate force_class values exist
+    auto_create_classes: false    # Auto-create missing force classes
+    
+  # Class size management
+  class_size_limits:
+    min_students_per_class: 15
+    max_students_per_class: 30
+    preferred_students_per_class: 25
+    enforce_strict_limits: false  # Whether to hard-enforce limits vs. treat as preferences
+    balance_tolerance: 2          # Maximum difference between largest and smallest class
+    
+  # Gender balance constraints
+  gender_balance:
+    enforce_balance: true
+    max_gender_imbalance: 3       # Maximum difference between male/female count per class
+    prefer_equal_distribution: true
+    
+  # Hard constraints (must be satisfied)
+  hard_constraints:
+    - "force_class"
+    - "force_friend"  
+    - "minimum_friends"
+    - "class_assignment_integrity"
+    
+  # Soft constraints (contribute to score but can be violated)
+  soft_constraints:
+    - "social_preferences"
+    - "academic_balance"
+    - "demographic_balance"
+    - "class_size_balance"
+    - "gender_balance"
+
+# Advanced initialization strategies
+initialization:
+  # Default strategy for unassigned students
+  default_strategy: "constraint_aware"  # Options: random, balanced, constraint_aware, academic_balanced
+  
+  # Auto-initialize unassigned students during optimization
+  auto_initialize: true
+  
+  # Target class calculation
+  target_classes:
+    auto_calculate: true
+    min_classes: 1
+    max_classes: 8
+    students_per_class_target: 25
+    
+  # Strategy-specific settings
+  strategies:
+    random:
+      description: "Random assignment with force constraint respect"
+      respect_constraints: true
+      
+    balanced:
+      description: "Balanced class sizes with round-robin assignment"
+      equal_class_sizes: true
+      tolerance: 1  # Allow +/- 1 student difference
+      
+    constraint_aware:
+      description: "Constraint-aware assignment prioritizing force constraints and preferences"
+      prioritize_force_constraints: true
+      group_force_friends: true
+      respect_social_preferences: true
+      optimize_academic_distribution: true
+      
+    academic_balanced:
+      description: "Academic score balanced distribution across classes"
+      sort_by_score: true
+      distribution_method: "round_robin"
+      maintain_score_variance: true
+
+# Performance and execution settings
+performance:
+  # Global performance settings
+  max_iterations: 1000
+  early_stopping: true
+  early_stop_threshold: 100
+  progress_reporting: true
+  log_level: "INFO"              # Options: DEBUG, INFO, WARNING, ERROR
+  
+  # Large dataset optimizations
+  large_dataset_threshold: 200   # Student count threshold for large dataset optimizations
+  large_dataset_adjustments:
+    reduce_population_size: true
+    reduce_generations: true
+    faster_algorithms_only: false
+    
+  # Memory management
+  memory_optimization: true
+  cleanup_intermediate_results: true
+  
+  # Parallel processing (future feature)
+  enable_parallel_processing: false
+  max_worker_threads: 4
+
+# Output and reporting configuration
+output:
+  # Basic output settings
+  save_optimization_history: true
+  save_detailed_reports: true
+  generate_comparison_reports: true
+  
+  # Report formats
+  formats:
+    - "csv"
+    - "yaml"
+    - "json"
+    
+  # Detailed metrics to include
+  include_metrics:
+    - "score_improvement"
+    - "execution_time"
+    - "algorithm_comparison"
+    - "constraint_violations"
+    - "convergence_analysis"
+    - "population_diversity"  # For genetic algorithm
+    - "temperature_history"   # For simulated annealing
+    
+  # File naming
+  timestamp_format: "%Y-%m-%d_%H-%M-%S"
+  output_directory: "results_{timestamp}"
+
+# Algorithm-specific advanced settings
+algorithm_advanced:
+  genetic:
+    # Advanced genetic algorithm settings
+    mutation_strategies:
+      - "random_swap"
+      - "random_move"
+      - "group_move"
+    crossover_strategies:
+      - "uniform"
+      - "single_point"
+    population_diversity:
+      measure_diversity: true
+      diversity_threshold: 0.1
+      diversity_maintenance: true
+    aging:
+      enable_aging: false
+      max_age: 10
+      
+  simulated_annealing:
+    # Advanced simulated annealing settings
+    cooling_schedules:
+      linear:
+        formula: "T = T0 - alpha * iteration"
+      exponential:
+        formula: "T = T0 * (alpha ^ iteration)"
+      logarithmic:
+        formula: "T = T0 / log(iteration + 1)"
+    acceptance_criteria:
+      use_modified_acceptance: false
+      acceptance_threshold: 0.01
+      
+  or_tools:
+    # Advanced OR-Tools settings
+    solver_parameters:
+      use_branching_strategy: true
+      branching_strategy: "AUTOMATIC"
+      use_restart_strategy: true
+      restart_strategy: "LUBY_RESTART"
+    constraint_modeling:
+      use_implied_constraints: true
+      symmetry_breaking: true
+      constraint_propagation: "FULL"
+    
+# User experience enhancements
+user_experience:
+  # Progress reporting
+  show_progress_bar: true
+  progress_update_interval: 10   # Percentage intervals for progress updates
+  show_intermediate_scores: true
+  
+  # Recommendations
+  auto_recommend_algorithm: true
+  recommend_based_on_size: true
+  recommend_based_on_constraints: true
+  
+  # Warnings and notifications
+  warn_on_long_runtime: true
+  warn_on_large_datasets: true
+  notify_on_constraint_violations: true
+
+# Validation and quality assurance
+validation:
+  # Pre-optimization validation
+  validate_initial_assignment: true
+  validate_force_constraints: true
+  validate_data_integrity: true
+  
+  # During optimization validation
+  validate_intermediate_solutions: true
+  solution_quality_checks: true
+  
+  # Post-optimization validation
+  validate_final_assignment: true
+  comprehensive_constraint_check: true
+  score_verification: true
+  
+  # Error handling
+  fail_on_constraint_violations: false
+  fail_on_validation_errors: false
+  retry_on_failure: true
+  max_retry_attempts: 3
+
+# Integration settings
+integration:
+  # Scorer integration
+  scorer_config_file: "default_scoring.yaml"
+  inherit_scorer_weights: true
+  override_scorer_settings: false
+  
+  # CLI integration
+  default_cli_behavior: "optimize"
+  auto_save_results: true
+  interactive_mode: false
+  
+  # External tool integration
+  export_for_external_tools: false
+  import_from_external_tools: false
+
+# Week 6 specific features
+week6_features:
+  # New features introduced in Week 6
+  or_tools_integration: true
+  enhanced_configuration: true
+  configuration_validation: true
+  user_profiles: true
+  
+  # Feature flags
+  experimental_features: false
+  beta_algorithms: false
+  advanced_reporting: true 

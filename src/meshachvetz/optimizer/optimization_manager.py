@@ -17,6 +17,7 @@ from .random_swap import RandomSwapOptimizer
 from .local_search import LocalSearchOptimizer
 from .simulated_annealing import SimulatedAnnealingOptimizer
 from .genetic import GeneticOptimizer
+from .or_tools_optimizer import ORToolsOptimizer
 from ..data.models import SchoolData, Student, ClassData
 from ..scorer.main_scorer import Scorer
 
@@ -70,8 +71,7 @@ class OptimizationManager:
             'local_search': LocalSearchOptimizer,
             'simulated_annealing': SimulatedAnnealingOptimizer,
             'genetic': GeneticOptimizer,
-            # Future algorithms:
-            # 'or_tools': ORToolsOptimizer
+            'or_tools': ORToolsOptimizer
         }
     
     def get_available_algorithms(self) -> List[str]:

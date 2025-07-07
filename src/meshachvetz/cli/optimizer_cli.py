@@ -86,7 +86,7 @@ Examples:
     optimize_parser.add_argument('--output-dir', type=validate_output_dir, 
                                 help='Output directory for all generated files')
     optimize_parser.add_argument('--algorithm', '-a', type=str, 
-                                choices=['random_swap', 'local_search', 'simulated_annealing', 'genetic'],
+                                choices=['random_swap', 'local_search', 'simulated_annealing', 'genetic', 'or_tools'],
                                 default='local_search',
                                 help='Optimization algorithm to use (default: local_search)')
     optimize_parser.add_argument('--max-iterations', type=int, default=1000,
@@ -152,7 +152,7 @@ Examples:
     compare_parser = subparsers.add_parser('compare', help='Compare multiple optimization algorithms')
     compare_parser.add_argument('input_file', type=str, help='Input CSV file with student data')
     compare_parser.add_argument('--algorithms', nargs='+', 
-                               choices=['random_swap', 'local_search', 'simulated_annealing', 'genetic'],
+                               choices=['random_swap', 'local_search', 'simulated_annealing', 'genetic', 'or_tools'],
                                default=['random_swap', 'local_search', 'simulated_annealing', 'genetic'],
                                help='Algorithms to compare (default: all)')
     compare_parser.add_argument('--max-iterations', type=int, default=500,

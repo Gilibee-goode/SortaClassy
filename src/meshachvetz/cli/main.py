@@ -81,7 +81,7 @@ For more help on a specific command:
     
     # Multiple algorithms option
     optimize_parser.add_argument('--algorithms', nargs='+', 
-                               choices=['random_swap', 'local_search', 'simulated_annealing', 'genetic'],
+                               choices=['random_swap', 'local_search', 'simulated_annealing', 'genetic', 'or_tools'],
                                default=['local_search', 'simulated_annealing', 'genetic'],
                                help='Multiple algorithms to compare (default: local_search, simulated_annealing, genetic)')
     
@@ -93,7 +93,7 @@ For more help on a specific command:
                                
     # Single algorithm option (only used when explicitly specified)
     optimize_parser.add_argument('--algorithm', '-a', type=str, 
-                                choices=['random_swap', 'local_search', 'simulated_annealing', 'genetic'], 
+                                choices=['random_swap', 'local_search', 'simulated_annealing', 'genetic', 'or_tools'], 
                                 help='Single optimization algorithm to use (overrides default multi-algorithm approach)')
     
     optimize_parser.add_argument('--max-iterations', type=int, default=1000,

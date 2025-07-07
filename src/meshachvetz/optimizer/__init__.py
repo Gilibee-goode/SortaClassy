@@ -8,6 +8,7 @@ from .random_swap import RandomSwapOptimizer
 from .local_search import LocalSearchOptimizer
 from .simulated_annealing import SimulatedAnnealingOptimizer
 from .genetic import GeneticOptimizer
+from .or_tools_optimizer import ORToolsOptimizer
 from .optimization_manager import OptimizationManager, AssignmentStatus, InitializationStrategy
 
 __all__ = [
@@ -17,6 +18,7 @@ __all__ = [
     'LocalSearchOptimizer',
     'SimulatedAnnealingOptimizer',
     'GeneticOptimizer',
+    'ORToolsOptimizer',
     'OptimizationManager',
     'AssignmentStatus',
     'InitializationStrategy'

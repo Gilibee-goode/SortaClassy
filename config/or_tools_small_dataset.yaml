@@ -1,0 +1,44 @@
+# OR-Tools Configuration for Small Datasets
+# Optimized for datasets with 8-50 students
+
+optimization:
+  algorithms:
+    or_tools:
+      # Time limits (in seconds)
+      time_limit_seconds: 30
+      
+      # Class size constraints (more flexible for small datasets)
+      target_class_size: 3      # Small target class size
+      class_size_tolerance: 2   # Allow classes from 1-5 students
+      
+      # Optimization objectives (weights for OR-Tools approximation)
+      friend_weight: 15         # Higher weight for friend satisfaction
+      conflict_penalty: 25      # Higher penalty for conflicts
+      balance_weight: 5         # Lower weight for balance (hard with small datasets)
+      
+      # Constraint handling
+      min_friends: 0            # Disable minimum friends for small datasets
+      respect_force_constraints: true
+      optimize_for_feasibility: true  # Focus on finding any feasible solution
+      
+      # Preprocessing
+      enable_preprocessing: true
+
+scoring:
+  weights:
+    student_layer: 0.7    # Higher weight on student satisfaction
+    class_layer: 0.1      # Lower weight on class balance
+    school_layer: 0.2     # Lower weight on school balance
+    
+  student_layer:
+    friend_satisfaction_weight: 0.6
+    conflict_avoidance_weight: 0.4
+    
+  class_layer:
+    gender_balance_weight: 1.0
+    
+  school_layer:
+    academic_balance_weight: 0.4
+    behavior_balance_weight: 0.3
+    class_size_balance_weight: 0.2
+    assistance_distribution_weight: 0.1 
