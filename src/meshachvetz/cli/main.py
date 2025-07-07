@@ -15,6 +15,7 @@ from meshachvetz import __version__
 from .scorer_cli import main as scorer_main
 from .optimizer_cli import main as optimizer_main
 from .config_manager import handle_config_set_command, handle_config_reset_command, handle_config_status_command
+from .interactive_cli import main as interactive_main
 
 
 def main():
@@ -24,15 +25,23 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Available Commands:
-  score      Score a student assignment CSV file
-  optimize   Optimize student class assignments
+  interactive   Start interactive menu mode (recommended for beginners)
+  score         Score a student assignment CSV file
+  optimize      Optimize student class assignments
   generate-assignment   Generate initial class assignments
-  validate   Validate a student data CSV file  
-  config     Show or manage configuration
-    show     Show current configuration
-    set      Set a configuration file as the new default
-    reset    Reset configuration to original defaults
-    status   Show configuration status and paths
+  validate      Validate a student data CSV file  
+  config        Show or manage configuration
+    show        Show current configuration
+    set         Set a configuration file as the new default
+    reset       Reset configuration to original defaults
+    status      Show configuration status and paths
+
+Interactive Mode:
+  # Launch user-friendly menu interface
+  meshachvetz interactive
+  
+  # OR simply run without arguments to enter interactive mode
+  meshachvetz
 
 Examples:
   # Get the best optimization result automatically (uses 3 best algorithms)
@@ -62,6 +71,9 @@ For more help on a specific command:
     
     # Add main commands
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
+    
+    # Interactive command
+    interactive_parser = subparsers.add_parser('interactive', help='Start interactive menu mode')
     
     # Score command
     score_parser = subparsers.add_parser('score', help='Score a student assignment CSV file')
@@ -162,14 +174,18 @@ For more help on a specific command:
     # Parse arguments
     args = parser.parse_args()
     
-    # Show help if no command provided
+    # If no command provided, default to interactive mode
     if not args.command:
-        parser.print_help()
-        sys.exit(1)
+        print("🎯 Welcome to Meshachvetz! Starting interactive mode...")
+        interactive_main()
+        return
     
     # Handle commands
     try:
-        if args.command in ['score', 'validate']:
+        if args.command == 'interactive':
+            # Start interactive mode
+            interactive_main()
+        elif args.command in ['score', 'validate']:
             # Delegate to scorer CLI
             sys.argv = ['scorer_cli.py', args.command] + sys.argv[2:]
             scorer_main()

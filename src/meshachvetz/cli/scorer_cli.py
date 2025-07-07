@@ -252,16 +252,18 @@ def handle_show_config_command(args):
     print(f"   Gender Balance: {config.weights.gender_balance}")
     
     print(f"\n🏛️  School Layer Weights:")
-    print(f"   Academic Balance:   {config.weights.academic_balance}")
-    print(f"   Behavior Balance:   {config.weights.behavior_balance}")
-    print(f"   Size Balance:       {config.weights.size_balance}")
-    print(f"   Assistance Balance: {config.weights.assistance_balance}")
+    print(f"   Academic Balance:     {config.weights.academic_balance}")
+    print(f"   Behavior Balance:     {config.weights.behavior_balance}")
+    print(f"   Studentiality Balance: {config.weights.studentiality_balance}")
+    print(f"   Size Balance:         {config.weights.size_balance}")
+    print(f"   Assistance Balance:   {config.weights.assistance_balance}")
     
     print(f"\n📏 Normalization Factors:")
-    print(f"   Academic Score Factor:  {config.normalization.academic_score_factor}")
-    print(f"   Behavior Rank Factor:   {config.normalization.behavior_rank_factor}")
-    print(f"   Class Size Factor:      {config.normalization.class_size_factor}")
-    print(f"   Assistance Count Factor: {config.normalization.assistance_count_factor}")
+    print(f"   Academic Score Factor:    {config.normalization.academic_score_factor}")
+    print(f"   Behavior Rank Factor:     {config.normalization.behavior_rank_factor}")
+    print(f"   Studentiality Rank Factor: {config.normalization.studentiality_rank_factor}")
+    print(f"   Class Size Factor:        {config.normalization.class_size_factor}")
+    print(f"   Assistance Count Factor:  {config.normalization.assistance_count_factor}")
 
 
 if __name__ == "__main__":

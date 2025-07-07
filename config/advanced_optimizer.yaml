@@ -1,113 +1,78 @@
-# Advanced Optimizer Configuration for Meshachvetz
-# Week 5: Advanced Optimization Algorithms
+# Advanced Optimizer Configuration
+# This configuration prioritizes student satisfaction first, then behavior/studentiality distribution,
+# with advanced optimization parameters for large datasets and complex scenarios
 
-# Default optimization settings
-default_algorithm: "local_search"
-default_max_iterations: 1000
-min_friends: 1
-respect_force_constraints: true
-
-# Algorithm-specific configurations
-algorithms:
-  random_swap:
-    enabled: true
-    max_iterations: 1000
-    early_stop_threshold: 100
-    min_improvement: 0.01
+# Scoring weights (most important part - prioritizing student satisfaction)
+weights:
+  student_layer:
+    friends: 0.7        # Weight for placing students with their preferred friends
+    dislikes: 0.3       # Weight for separating students from disliked peers
     
-  local_search:
-    enabled: true
-    max_passes: 10
-    min_improvement: 0.01
-    shuffle_students: true
-    greedy_mode: true  # Take first improvement vs best improvement
+  class_layer:
+    gender_balance: 1.0  # Weight for maintaining gender balance within classes
+    
+  school_layer:
+    academic_balance: 0.05        # Weight for academic score distribution across classes
+    behavior_balance: 0.4         # Weight for behavior rank distribution across classes
+    studentiality_balance: 0.4    # Weight for studentiality rank distribution across classes
+    size_balance: 0.0             # Weight for class size balance
+    assistance_balance: 0.15      # Weight for assistance package distribution
+    
+  layers:
+    student: 0.75   # Primary focus: Individual student satisfaction
+    class: 0.05     # Minimal focus: Gender balance within classes
+    school: 0.2     # Secondary focus: School-wide balance metrics
+
+# Advanced optimization parameters (for large datasets and complex scenarios)
+optimization:
+  max_iterations: 5000           # High iteration limit for complex problems
+  improvement_threshold: 0.001   # Very strict improvement threshold
+  convergence_patience: 200      # High patience for complex convergence
+  
+  # Advanced genetic algorithm parameters
+  genetic:
+    population_size: 200         # Large population for complex problems
+    mutation_rate: 0.2           # Higher mutation rate for complex exploration
+    crossover_rate: 0.9          # Very high crossover rate
+    elite_size: 40               # Large elite preservation
+    tournament_size: 7           # Larger tournament size
+    adaptive_mutation: true      # Enable adaptive mutation rates
+    multi_objective: true        # Multi-objective optimization
     
   simulated_annealing:
-    enabled: true
-    initial_temperature: 100.0
-    min_temperature: 0.01
-    cooling_rate: 0.95
-    cooling_schedule: "exponential"  # exponential, linear, logarithmic, adaptive
-    iterations_per_temperature: 50
-    swap_probability: 0.7  # vs single move
+    initial_temperature: 500.0   # Very high starting temperature
+    cooling_rate: 0.995          # Very slow cooling
+    min_temperature: 0.0001      # Very low minimum temperature
+    reheat_threshold: 300        # Extended reheat threshold
+    adaptive_cooling: true       # Adaptive cooling schedule
     
-  genetic:
-    enabled: true
-    population_size: 50
-    max_generations: 100
-    elite_size: 5
-    crossover_rate: 0.8
-    mutation_rate: 0.1
-    tournament_size: 3
-    selection_method: "tournament"  # tournament, roulette, rank
-    convergence_generations: 10
-    
-# Multi-algorithm strategies
-multi_algorithm:
-  default_strategy: "parallel"  # parallel, sequential, best_of
-  default_algorithms: ["local_search", "simulated_annealing", "genetic"]
-  
-  strategies:
-    parallel:
-      description: "Run algorithms independently and compare results"
-      
-    sequential:
-      description: "Run algorithms in sequence, using output of one as input to next"
-      algorithm_order: ["genetic", "local_search", "simulated_annealing"]
-      
-    best_of:
-      description: "Run algorithms in parallel and return the best result"
-      
-# Initialization settings
-initialization:
-  default_strategy: "constraint_aware"
-  auto_calculate_classes: true
-  target_students_per_class: 25
-  
-  strategies:
-    random:
-      description: "Randomly assign students to classes"
-      
-    balanced:
-      description: "Ensure equal class sizes via round-robin distribution"
-      
-    constraint_aware:
-      description: "Balance all constraints and preferences during assignment"
-      
-    academic_balanced:
-      description: "Distribute students to balance academic scores across classes"
+  local_search:
+    max_neighbors: 100           # Extensive neighbor exploration
+    restart_threshold: 25        # Frequent restarts for exploration
+    multi_start: true            # Multiple starting points
+    parallel_search: true        # Parallel search threads
 
-# Performance optimization
-performance:
-  enable_caching: true
-  incremental_scoring: true
-  parallel_evaluation: false  # Future feature
-  memory_limit_mb: 1024
+# Class configuration
+class_config:
+  target_classes: 5
+  min_class_size: 15
+  max_class_size: 30
+  preferred_class_size: 25
+  allow_uneven_classes: true
 
-# Constraint settings
-constraints:
-  minimum_friends:
-    default: 1
-    allow_override: true
-    max_allowed: 3
-    
-  force_constraints:
-    respect_force_class: true
-    respect_force_friend: true
-    allow_breaking_force_friend: false  # For special algorithms like SA/GA
-    
-  class_size:
-    min_students: 15
-    max_students: 35
-    ideal_range: [20, 30]
+# Normalization factors
+normalization:
+  academic_score_factor: 2.0
+  behavior_rank_factor: 35.0
+  studentiality_rank_factor: 35.0
+  class_size_factor: 5.0
+  assistance_count_factor: 10.0
 
-# Logging and reporting
-logging:
-  level: "INFO"
-  detailed_progress: false
-  algorithm_comparison: true
-  
-reporting:
-  generate_reports: true
-  include_algorithm_metrics: true
-  save_intermediate_results: false 
+# Validation rules
+validation:
+  student_id_length: 9
+  max_name_length: 50
+  min_academic_score: 0.0
+  max_academic_score: 100.0
+  valid_behavior_ranks: ['A', 'B', 'C', 'D']
+  valid_boolean_values: ['true', 'false', '1', '0', 'yes', 'no', 'True', 'False', 'TRUE', 'FALSE', 'YES', 'NO'] 

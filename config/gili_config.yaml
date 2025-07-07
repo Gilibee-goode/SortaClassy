@@ -1,5 +1,6 @@
-# Custom Meshachvetz Configuration Example
+# Custom Meshachvetz Configuration Example - Updated with Student-First Priorities
 # This shows how to create a custom configuration with different weights
+# Prioritizes student satisfaction first, then behavior/studentiality distribution
 
 weights:
   # Student Layer: Individual satisfaction metrics
@@ -13,16 +14,17 @@ weights:
   
   # School Layer: Inter-class balance metrics  
   school_layer:
-    academic_balance: 0.1     # Increased academic balance importance (was 0.3)
-    behavior_balance: 0.5     # Reduced behavior balance importance (was 0.2)
-    size_balance: 0.2         # Increased size balance importance (was 0.3)
-    assistance_balance: 0.2   # Reduced assistance balance importance (was 0.2)
+    academic_balance: 0.05        # Reduced academic balance importance (was 0.1)
+    behavior_balance: 0.45        # High behavior balance importance (was 0.5)
+    studentiality_balance: 0.35   # High studentiality balance importance (new)
+    size_balance: 0.05           # Reduced size balance importance (was 0.2)
+    assistance_balance: 0.1       # Reduced assistance balance importance (was 0.2)
   
   # Layer Weights: How much each layer contributes to final score
   layers:
-    student: 0.6    # Increased student satisfaction weight (was 0.5)
-    class: 0.1      # Reduced class balance weight (was 0.2)
-    school: 0.3     # Keep school balance weight same
+    student: 0.8    # Increased student satisfaction weight (was 0.6)
+    class: 0.05     # Reduced class balance weight (was 0.1)
+    school: 0.15    # Reduced school balance weight (was 0.3)
 
 # Class Configuration: Parameters for class organization
 class_config:
@@ -34,10 +36,11 @@ class_config:
 
 # Normalization Factors: Adjusted for different sensitivity
 normalization:
-  academic_score_factor: 1.5    # Less sensitive to academic imbalances (was 2.0)
-  behavior_rank_factor: 40.0    # More sensitive to behavior imbalances (was 35.0)
-  class_size_factor: 8.0        # More sensitive to size imbalances (was 5.0)
-  assistance_count_factor: 15.0 # More sensitive to assistance imbalances (was 10.0)
+  academic_score_factor: 1.5          # Less sensitive to academic imbalances (was 2.0)
+  behavior_rank_factor: 40.0          # More sensitive to behavior imbalances (was 35.0)
+  studentiality_rank_factor: 40.0     # More sensitive to studentiality imbalances (new)
+  class_size_factor: 8.0              # More sensitive to size imbalances (was 5.0)
+  assistance_count_factor: 15.0       # More sensitive to assistance imbalances (was 10.0)
 
 # Validation Rules: Can also be customized
 validation:

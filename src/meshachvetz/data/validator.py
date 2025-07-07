@@ -31,7 +31,7 @@ class DataValidator:
     # Required columns according to data format specification
     REQUIRED_COLUMNS = [
         'student_id', 'first_name', 'last_name', 'gender', 'class',
-        'academic_score', 'behavior_rank', 'assistance_package'
+        'academic_score', 'behavior_rank', 'studentiality_rank', 'assistance_package'
     ]
     
     # Optional social preference columns
@@ -47,6 +47,9 @@ class DataValidator:
     
     # Valid behavior ranks
     VALID_BEHAVIOR_RANKS = {'A', 'B', 'C', 'D'}
+    
+    # Valid studentiality ranks
+    VALID_STUDENTIALITY_RANKS = {'A', 'B', 'C', 'D'}
     
     # Valid gender values
     VALID_GENDERS = {'M', 'F'}
@@ -148,6 +151,9 @@ class DataValidator:
             # Validate behavior rank
             self._validate_behavior_rank(row, row_num)
             
+            # Validate studentiality rank
+            self._validate_studentiality_rank(row, row_num)
+            
             # Validate assistance package
             self._validate_assistance_package(row, row_num)
             
@@ -229,6 +235,19 @@ class DataValidator:
         
         if rank_str not in self.VALID_BEHAVIOR_RANKS:
             self.errors.append(f"Row {row_num}: Behavior rank must be A-E, got: {rank}")
+            
+    def _validate_studentiality_rank(self, row: pd.Series, row_num: int) -> None:
+        """Validate studentiality rank."""
+        rank = row.get('studentiality_rank')
+        
+        if pd.isna(rank) or str(rank).strip() == '':
+            self.warnings.append(f"Row {row_num}: Studentiality rank is missing, will default to 'A'")
+            return
+            
+        rank_str = str(rank).strip().upper()
+        
+        if rank_str not in self.VALID_STUDENTIALITY_RANKS:
+            self.errors.append(f"Row {row_num}: Studentiality rank must be A-D, got: {rank}")
             
     def _validate_assistance_package(self, row: pd.Series, row_num: int) -> None:
         """Validate assistance package boolean value."""

@@ -25,21 +25,22 @@ class ScoringWeights:
     gender_balance: float = 1.0
     
     # School layer weights
-    academic_balance: float = 0.3
-    behavior_balance: float = 0.2
-    size_balance: float = 0.3
-    assistance_balance: float = 0.2
+    academic_balance: float = 0.05
+    behavior_balance: float = 0.4
+    studentiality_balance: float = 0.4
+    size_balance: float = 0.0
+    assistance_balance: float = 0.15
     
     # Layer weights
-    student_layer: float = 0.5
-    class_layer: float = 0.2
-    school_layer: float = 0.3
+    student_layer: float = 0.75
+    class_layer: float = 0.05
+    school_layer: float = 0.2
     
     def validate(self) -> None:
         """Validate that all weights are positive."""
         weights = [
             self.friends, self.dislikes, self.gender_balance,
-            self.academic_balance, self.behavior_balance,
+            self.academic_balance, self.behavior_balance, self.studentiality_balance,
             self.size_balance, self.assistance_balance,
             self.student_layer, self.class_layer, self.school_layer
         ]
@@ -54,13 +55,14 @@ class NormalizationFactors:
     """Configuration for normalization factors."""
     academic_score_factor: float = 2.0
     behavior_rank_factor: float = 35.0
+    studentiality_rank_factor: float = 35.0
     class_size_factor: float = 5.0
     assistance_count_factor: float = 10.0
     
     def validate(self) -> None:
         """Validate that all factors are positive."""
         factors = [
-            self.academic_score_factor, self.behavior_rank_factor,
+            self.academic_score_factor, self.behavior_rank_factor, self.studentiality_rank_factor,
             self.class_size_factor, self.assistance_count_factor
         ]
         
@@ -147,15 +149,16 @@ class Config:
                 'gender_balance': 1.0
             },
             'school_layer': {
-                'academic_balance': 0.3,
-                'behavior_balance': 0.2,
-                'size_balance': 0.3,
-                'assistance_balance': 0.2
+                'academic_balance': 0.05,
+                'behavior_balance': 0.4,
+                'studentiality_balance': 0.4,
+                'size_balance': 0.0,
+                'assistance_balance': 0.15
             },
             'layers': {
-                'student': 0.5,
-                'class': 0.2,
-                'school': 0.3
+                'student': 0.75,
+                'class': 0.05,
+                'school': 0.2
             }
         },
         'class_config': {
@@ -168,6 +171,7 @@ class Config:
         'normalization': {
             'academic_score_factor': 2.0,
             'behavior_rank_factor': 35.0,
+            'studentiality_rank_factor': 35.0,
             'class_size_factor': 5.0,
             'assistance_count_factor': 10.0
         },
@@ -289,39 +293,41 @@ class Config:
                 raise ConfigError(f"Missing required weights section: {section}")
                 
     def _create_config_objects(self) -> None:
-        """Create structured configuration objects from config data."""
-        # Create weights object
-        weights_config = self.config_data['weights']
+        """Create configuration objects from loaded data."""
+        # Create scoring weights
+        weights_data = self.config_data.get('weights', {})
+        
+        student_weights = weights_data.get('student_layer', {})
+        class_weights = weights_data.get('class_layer', {})
+        school_weights = weights_data.get('school_layer', {})
+        layer_weights = weights_data.get('layers', {})
+        
         self.weights = ScoringWeights(
-            friends=weights_config['student_layer']['friends'],
-            dislikes=weights_config['student_layer']['dislikes'],
-            gender_balance=weights_config['class_layer']['gender_balance'],
-            academic_balance=weights_config['school_layer']['academic_balance'],
-            behavior_balance=weights_config['school_layer']['behavior_balance'],
-            size_balance=weights_config['school_layer']['size_balance'],
-            assistance_balance=weights_config['school_layer']['assistance_balance'],
-            student_layer=weights_config['layers']['student'],
-            class_layer=weights_config['layers']['class'],
-            school_layer=weights_config['layers']['school']
+            # Student layer
+            friends=student_weights.get('friends', 0.7),
+            dislikes=student_weights.get('dislikes', 0.3),
+            # Class layer
+            gender_balance=class_weights.get('gender_balance', 1.0),
+            # School layer
+            academic_balance=school_weights.get('academic_balance', 0.05),
+            behavior_balance=school_weights.get('behavior_balance', 0.4),
+            studentiality_balance=school_weights.get('studentiality_balance', 0.4),
+            size_balance=school_weights.get('size_balance', 0.0),
+            assistance_balance=school_weights.get('assistance_balance', 0.15),
+            # Layer weights
+            student_layer=layer_weights.get('student', 0.75),
+            class_layer=layer_weights.get('class', 0.05),
+            school_layer=layer_weights.get('school', 0.2)
         )
         
-        # Create class config object
-        class_config_data = self.config_data['class_config']
-        self.class_config = ClassConfig(
-            target_classes=class_config_data['target_classes'],
-            min_class_size=class_config_data['min_class_size'],
-            max_class_size=class_config_data['max_class_size'],
-            preferred_class_size=class_config_data['preferred_class_size'],
-            allow_uneven_classes=class_config_data['allow_uneven_classes']
-        )
-        
-        # Create normalization factors object
-        norm_config = self.config_data['normalization']
+        # Create normalization factors
+        norm_data = self.config_data.get('normalization', {})
         self.normalization = NormalizationFactors(
-            academic_score_factor=norm_config['academic_score_factor'],
-            behavior_rank_factor=norm_config['behavior_rank_factor'],
-            class_size_factor=norm_config['class_size_factor'],
-            assistance_count_factor=norm_config['assistance_count_factor']
+            academic_score_factor=norm_data.get('academic_score_factor', 2.0),
+            behavior_rank_factor=norm_data.get('behavior_rank_factor', 35.0),
+            studentiality_rank_factor=norm_data.get('studentiality_rank_factor', 35.0),
+            class_size_factor=norm_data.get('class_size_factor', 5.0),
+            assistance_count_factor=norm_data.get('assistance_count_factor', 10.0)
         )
         
         # Create validation rules object
@@ -333,6 +339,16 @@ class Config:
             max_academic_score=val_config['max_academic_score'],
             valid_behavior_ranks=val_config['valid_behavior_ranks'],
             valid_boolean_values=val_config['valid_boolean_values']
+        )
+        
+        # Create class configuration object
+        class_config_data = self.config_data.get('class_config', {})
+        self.class_config = ClassConfig(
+            target_classes=class_config_data.get('target_classes', 5),
+            min_class_size=class_config_data.get('min_class_size', 15),
+            max_class_size=class_config_data.get('max_class_size', 30),
+            preferred_class_size=class_config_data.get('preferred_class_size', 25),
+            allow_uneven_classes=class_config_data.get('allow_uneven_classes', True)
         )
         
         # Validate all objects
@@ -372,7 +388,7 @@ class Config:
         """
         valid_weights = [
             'friends', 'dislikes', 'gender_balance',
-            'academic_balance', 'behavior_balance',
+            'academic_balance', 'behavior_balance', 'studentiality_balance',
             'size_balance', 'assistance_balance',
             'student_layer', 'class_layer', 'school_layer'
         ]
@@ -389,7 +405,7 @@ class Config:
                 self.config_data['weights']['student_layer'][key] = value
             elif key in ['gender_balance']:
                 self.config_data['weights']['class_layer'][key] = value
-            elif key in ['academic_balance', 'behavior_balance', 'size_balance', 'assistance_balance']:
+            elif key in ['academic_balance', 'behavior_balance', 'studentiality_balance', 'size_balance', 'assistance_balance']:
                 self.config_data['weights']['school_layer'][key] = value
             elif key in ['student_layer', 'class_layer', 'school_layer']:
                 layer_key = key.replace('_layer', '')
@@ -433,6 +449,7 @@ class Config:
         summary.append(f"  School Layer:")
         summary.append(f"    Academic Balance: {self.weights.academic_balance}")
         summary.append(f"    Behavior Balance: {self.weights.behavior_balance}")
+        summary.append(f"    Studentiality Balance: {self.weights.studentiality_balance}")
         summary.append(f"    Size Balance: {self.weights.size_balance}")
         summary.append(f"    Assistance Balance: {self.weights.assistance_balance}")
         summary.append(f"  Layer Weights:")
@@ -444,6 +461,7 @@ class Config:
         summary.append(f"\n⚖️  Normalization Factors:")
         summary.append(f"  Academic Score Factor: {self.normalization.academic_score_factor}")
         summary.append(f"  Behavior Rank Factor: {self.normalization.behavior_rank_factor}")
+        summary.append(f"  Studentiality Rank Factor: {self.normalization.studentiality_rank_factor}")
         summary.append(f"  Class Size Factor: {self.normalization.class_size_factor}")
         summary.append(f"  Assistance Count Factor: {self.normalization.assistance_count_factor}")
         

@@ -1,153 +1,71 @@
-# Default Optimizer Configuration for Meshachvetz
-# Phase 2: Basic optimization with Random Swap algorithm
+# Default Optimizer Configuration
+# This configuration prioritizes student satisfaction first, then behavior/studentiality distribution,
+# followed by assistance packages, with lower weights for other parameters
 
-# Optimization algorithms and strategy
+# Scoring weights (most important part)
+weights:
+  student_layer:
+    friends: 0.7        # Weight for placing students with their preferred friends
+    dislikes: 0.3       # Weight for separating students from disliked peers
+    
+  class_layer:
+    gender_balance: 1.0  # Weight for maintaining gender balance within classes
+    
+  school_layer:
+    academic_balance: 0.05        # Weight for academic score distribution across classes
+    behavior_balance: 0.4         # Weight for behavior rank distribution across classes
+    studentiality_balance: 0.4    # Weight for studentiality rank distribution across classes
+    size_balance: 0.0             # Weight for class size balance
+    assistance_balance: 0.15      # Weight for assistance package distribution
+    
+  layers:
+    student: 0.75   # Primary focus: Individual student satisfaction
+    class: 0.05     # Minimal focus: Gender balance within classes
+    school: 0.2     # Secondary focus: School-wide balance metrics
+
+# Optimization parameters
 optimization:
-  algorithms:
-    - name: "random_swap"
-      enabled: true
-      parameters:
-        max_iterations: 1000
-        early_stop_threshold: 100
-        accept_neutral_moves: false
-        max_swap_attempts: 50
-        
-    # Future algorithms (Phase 2 Week 5+)
-    - name: "genetic"
-      enabled: false
-      parameters:
-        population_size: 50
-        generations: 100
-        mutation_rate: 0.1
-        crossover_rate: 0.8
-        elite_size: 5
-        
-    - name: "simulated_annealing"
-      enabled: false
-      parameters:
-        initial_temperature: 100.0
-        cooling_rate: 0.95
-        min_temperature: 0.1
-        cooling_schedule: "exponential"
-        
-    - name: "local_search"
-      enabled: false
-      parameters:
-        max_passes: 10
-        min_improvement: 0.01
-        
-    - name: "or_tools"
-      enabled: false
-      parameters:
-        time_limit: 300
-        
-  # Multi-algorithm strategy
-  strategy: "single"  # Options: "single", "sequential", "parallel", "best_of"
-  default_algorithm: "random_swap"
-
-# Constraint handling
-constraints:
-  # Minimum friends constraint (Phase 2 Week 4 key feature)
-  minimum_friends:
-    default: 1                    # Default minimum friends per student
-    allow_override: true          # Can be overridden via CLI
-    max_allowed: 3                # Maximum constraint value
-    
-  # Force constraint handling
-  force_constraints:
-    respect_force_class: true     # Honor force_class assignments
-    respect_force_friend: true    # Honor force_friend groups
-    
-  # Hard constraints (must be satisfied)
-  hard_constraints:
-    - "force_class"
-    - "force_friend"  
-    - "minimum_friends"
-    - "class_assignment_integrity"
-    
-  # Soft constraints (contribute to score but can be violated)
-  soft_constraints:
-    - "social_preferences"
-    - "academic_balance"
-    - "demographic_balance"
-    - "class_size_balance"
-
-# Initialization strategies for unassigned students
-initialization:
-  # Default strategy when students need assignment
-  default_strategy: "constraint_aware"  # Options: random, balanced, constraint_aware, academic_balanced
+  max_iterations: 1000           # Maximum number of optimization iterations
+  improvement_threshold: 0.01    # Minimum improvement to continue optimization
+  convergence_patience: 50       # Iterations without improvement before stopping
   
-  # Auto-initialize unassigned students during optimization
-  auto_initialize: true
-  
-  # Target class calculation
-  class_size_targets:
-    min_students_per_class: 15
-    max_students_per_class: 30
-    preferred_students_per_class: 25
-    
-  # Strategy-specific settings
-  strategies:
-    random:
-      description: "Random assignment with force constraint respect"
-      
-    balanced:
-      description: "Balanced class sizes with round-robin assignment"
-      
-    constraint_aware:
-      description: "Constraint-aware assignment (force_class, force_friend, preferences)"
-      prioritize_force_constraints: true
-      group_force_friends: true
-      
-    academic_balanced:
-      description: "Academic score balanced distribution across classes"
-      sort_by_score: true
-      distribution_method: "round_robin"
-
-# Performance settings
-performance:
-  max_iterations: 1000
-  early_stopping: true
-  early_stop_threshold: 100
-  progress_reporting: true
-  
-# Output settings
-output:
-  save_optimization_history: true
-  save_detailed_reports: true
-  generate_comparison_reports: false
-
-# Algorithm-specific default parameters
-algorithm_defaults:
-  random_swap:
-    max_iterations: 1000
-    early_stop_threshold: 100
-    accept_neutral_moves: false
-    max_swap_attempts: 50
-    
+  # Algorithm-specific parameters
   genetic:
-    population_size: 50
-    generations: 100
-    mutation_rate: 0.1
-    crossover_rate: 0.8
-    elite_size: 5
+    population_size: 50          # Size of genetic algorithm population
+    mutation_rate: 0.1           # Probability of mutation
+    crossover_rate: 0.8          # Probability of crossover
+    elite_size: 10               # Number of elite individuals to preserve
     
   simulated_annealing:
-    initial_temperature: 100.0
-    cooling_rate: 0.95
-    min_temperature: 0.1
-    cooling_schedule: "exponential"
+    initial_temperature: 100.0   # Starting temperature
+    cooling_rate: 0.95           # Temperature reduction factor
+    min_temperature: 0.01        # Minimum temperature
     
   local_search:
-    max_passes: 10
-    min_improvement: 0.01
-    
-  or_tools:
-    time_limit: 300
+    max_neighbors: 20            # Maximum neighbors to explore per iteration
+    restart_threshold: 100       # Iterations before restart
 
-# Validation settings
+# Class configuration
+class_config:
+  target_classes: 5
+  min_class_size: 15
+  max_class_size: 30
+  preferred_class_size: 25
+  allow_uneven_classes: true
+
+# Normalization factors
+normalization:
+  academic_score_factor: 2.0
+  behavior_rank_factor: 35.0
+  studentiality_rank_factor: 35.0
+  class_size_factor: 5.0
+  assistance_count_factor: 10.0
+
+# Validation rules
 validation:
-  validate_initial_assignment: true
-  validate_intermediate_solutions: true
-  validate_final_assignment: true
-  fail_on_constraint_violations: true 
+  student_id_length: 9
+  max_name_length: 50
+  min_academic_score: 0.0
+  max_academic_score: 100.0
+  valid_behavior_ranks: ['A', 'B', 'C', 'D']
+  valid_boolean_values: ['true', 'false', '1', '0', 'yes', 'no', 'True', 'False', 'TRUE', 'FALSE', 'YES', 'NO'] 

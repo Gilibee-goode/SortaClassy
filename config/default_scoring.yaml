@@ -1,65 +1,45 @@
-# Custom Meshachvetz Configuration Example
-# This shows how to create a custom configuration with different weights
+# Default Scoring Configuration
+# This configuration prioritizes student satisfaction first, then behavior/studentiality distribution,
+# followed by assistance packages, with lower weights for other parameters
 
 weights:
-  # Student Layer: Individual satisfaction metrics
   student_layer:
-    friends: 0.8      # Increased focus on friend placement (was 0.7)
-    dislikes: 0.2     # Reduced focus on conflict avoidance (was 0.3)
-  
-  # Class Layer: Intra-class balance metrics
+    friends: 0.7        # Weight for placing students with their preferred friends
+    dislikes: 0.3       # Weight for separating students from disliked peers
+    
   class_layer:
-    gender_balance: 1.0   # Keep gender balance important
-  
-  # School Layer: Inter-class balance metrics  
+    gender_balance: 1.0  # Weight for maintaining gender balance within classes
+    
   school_layer:
-    academic_balance: 0.1     # Increased academic balance importance (was 0.3)
-    behavior_balance: 0.5     # Reduced behavior balance importance (was 0.2)
-    size_balance: 0.2         # Increased size balance importance (was 0.3)
-    assistance_balance: 0.2   # Reduced assistance balance importance (was 0.2)
-  
-  # Layer Weights: How much each layer contributes to final score
+    academic_balance: 0.05        # Weight for academic score distribution across classes
+    behavior_balance: 0.4         # Weight for behavior rank distribution across classes
+    studentiality_balance: 0.4    # Weight for studentiality rank distribution across classes  
+    size_balance: 0.0             # Weight for class size balance
+    assistance_balance: 0.15      # Weight for assistance package distribution
+    
   layers:
-    student: 0.6    # Increased student satisfaction weight (was 0.5)
-    class: 0.1      # Reduced class balance weight (was 0.2)
-    school: 0.3     # Keep school balance weight same
+    student: 0.75   # Primary focus: Individual student satisfaction
+    class: 0.05     # Minimal focus: Gender balance within classes
+    school: 0.2     # Secondary focus: School-wide balance metrics
 
-# Class Configuration: Parameters for class organization
 class_config:
-  target_classes: 4           # Different target number of classes (was 5)
-  min_class_size: 20          # Larger minimum class size (was 15)
-  max_class_size: 35          # Larger maximum class size (was 30)
-  preferred_class_size: 28    # Larger preferred class size (was 25)
-  allow_uneven_classes: false # Require more even classes (was true)
+  target_classes: 5
+  min_class_size: 15
+  max_class_size: 30
+  preferred_class_size: 25
+  allow_uneven_classes: true
 
-# Normalization Factors: Adjusted for different sensitivity
 normalization:
-  academic_score_factor: 1.5    # Less sensitive to academic imbalances (was 2.0)
-  behavior_rank_factor: 40.0    # More sensitive to behavior imbalances (was 35.0)
-  class_size_factor: 8.0        # More sensitive to size imbalances (was 5.0)
-  assistance_count_factor: 15.0 # More sensitive to assistance imbalances (was 10.0)
+  academic_score_factor: 2.0
+  behavior_rank_factor: 35.0
+  studentiality_rank_factor: 35.0
+  class_size_factor: 5.0
+  assistance_count_factor: 10.0
 
-# Validation Rules: Can also be customized
 validation:
   student_id_length: 9
   max_name_length: 50
   min_academic_score: 0.0
   max_academic_score: 100.0
-  valid_behavior_ranks:
-    - A
-    - B
-    - C
-    - D
-  valid_boolean_values:
-    - 'true'
-    - 'false'
-    - '1'
-    - '0'
-    - 'yes'
-    - 'no'
-    - 'True'
-    - 'False'
-    - 'TRUE'
-    - 'FALSE'
-    - 'YES'
-    - 'NO' 
+  valid_behavior_ranks: ['A', 'B', 'C', 'D']
+  valid_boolean_values: ['true', 'false', '1', '0', 'yes', 'no', 'True', 'False', 'TRUE', 'FALSE', 'YES', 'NO'] 

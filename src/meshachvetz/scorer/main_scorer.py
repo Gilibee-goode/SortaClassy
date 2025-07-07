@@ -255,11 +255,13 @@ class Scorer:
         # Show balance metrics with their standard deviations
         academic_std = school_scores['academic_balance']['std_dev']
         behavior_std = school_scores['behavior_balance']['std_dev']
+        studentiality_std = school_scores['studentiality_balance']['std_dev']
         size_std = school_scores['size_balance']['std_dev']
         assistance_std = school_scores['assistance_balance']['std_dev']
         
         lines.append(f"   Academic Balance: {school_scores['academic_balance']['score']:.1f}/100 (σ={academic_std:.2f})")
         lines.append(f"   Behavior Balance: {school_scores['behavior_balance']['score']:.1f}/100 (σ={behavior_std:.2f})")
+        lines.append(f"   Studentiality Balance: {school_scores['studentiality_balance']['score']:.1f}/100 (σ={studentiality_std:.2f})")
         lines.append(f"   Size Balance: {school_scores['size_balance']['score']:.1f}/100 (σ={size_std:.2f})")
         lines.append(f"   Assistance Balance: {school_scores['assistance_balance']['score']:.1f}/100 (σ={assistance_std:.2f})")
         
@@ -322,6 +324,8 @@ class Scorer:
                      f"(σ={school_scores['academic_balance']['std_dev']:.2f})")
         report.append(f"Behavior Balance: {school_scores['behavior_balance']['score']:.1f}/100 "
                      f"(σ={school_scores['behavior_balance']['std_dev']:.2f})")
+        report.append(f"Studentiality Balance: {school_scores['studentiality_balance']['score']:.1f}/100 "
+                     f"(σ={school_scores['studentiality_balance']['std_dev']:.2f})")
         report.append(f"Size Balance: {school_scores['size_balance']['score']:.1f}/100 "
                      f"(σ={school_scores['size_balance']['std_dev']:.2f})")
         report.append(f"Assistance Balance: {school_scores['assistance_balance']['score']:.1f}/100 "
@@ -562,6 +566,7 @@ class Scorer:
             metrics = [
                 ("Academic Balance", school_scores['academic_balance']),
                 ("Behavior Balance", school_scores['behavior_balance']),
+                ("Studentiality Balance", school_scores['studentiality_balance']),
                 ("Size Balance", school_scores['size_balance']),
                 ("Assistance Balance", school_scores['assistance_balance'])
             ]
@@ -580,13 +585,14 @@ class Scorer:
             # Add class-specific values
             writer.writerow([])
             writer.writerow(["Class-Specific Values"])
-            writer.writerow(["Class ID", "Academic Average", "Behavior Average", "Size", "Assistance Count"])
+            writer.writerow(["Class ID", "Academic Average", "Behavior Average", "Studentiality Average", "Size", "Assistance Count"])
             
             for class_id in school_scores['academic_balance']['class_values'].keys():
                 writer.writerow([
                     class_id,
                     f"{school_scores['academic_balance']['class_values'][class_id]:.2f}",
                     f"{school_scores['behavior_balance']['class_values'][class_id]:.2f}",
+                    f"{school_scores['studentiality_balance']['class_values'][class_id]:.2f}",
                     school_scores['size_balance']['class_values'][class_id],
                     school_scores['assistance_balance']['class_values'][class_id]
                 ])
@@ -623,6 +629,7 @@ class Scorer:
             writer.writerow(["Metric", "Weight"])
             writer.writerow(["Academic Balance", self.config.weights.academic_balance])
             writer.writerow(["Behavior Balance", self.config.weights.behavior_balance])
+            writer.writerow(["Studentiality Balance", self.config.weights.studentiality_balance])
             writer.writerow(["Size Balance", self.config.weights.size_balance])
             writer.writerow(["Assistance Balance", self.config.weights.assistance_balance])
             writer.writerow([])
@@ -632,6 +639,7 @@ class Scorer:
             writer.writerow(["Factor", "Value"])
             writer.writerow(["Academic Score Factor", self.config.normalization.academic_score_factor])
             writer.writerow(["Behavior Rank Factor", self.config.normalization.behavior_rank_factor])
+            writer.writerow(["Studentiality Rank Factor", self.config.normalization.studentiality_rank_factor])
             writer.writerow(["Class Size Factor", self.config.normalization.class_size_factor])
             writer.writerow(["Assistance Count Factor", self.config.normalization.assistance_count_factor])
 

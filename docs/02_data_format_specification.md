@@ -13,7 +13,8 @@ The input CSV file must contain the following columns:
 | `gender` | String | Student's gender | "M", "F" |
 | `class` | String | Assigned class identifier | "1", "2", "3" |
 | `academic_score` | Float | Academic performance score (0-100) | 85.5, 92.0, 78.3 |
-| `behavior_rank` | String | Behavior ranking (A-E, where A=excellent) | "A", "B", "C", "D", "E" |
+| `behavior_rank` | String | Behavior ranking (A-D, where A=excellent) | "A", "B", "C", "D" |
+| `studentiality_rank` | String | Academic diligence ranking (A-D, where A=excellent) | "A", "B", "C", "D" |
 | `assistance_package` | Boolean | Whether student needs assistance | true, false |
 | `preferred_friend_1` | String | First preferred friend ID (optional) | "203765489", "" |
 | `preferred_friend_2` | String | Second preferred friend ID (optional) | "213568467", "" |
@@ -59,6 +60,14 @@ The input CSV file must contain the following columns:
 - Null values will be treated as "A" (Excellent)
 - **Expected Distribution**: Most students should be A, then B, with steep drop to C, and D being rare
 
+#### Studentiality Rank
+- Must be one of: "A", "B", "C", "D"
+- A = Excellent (consistently completes homework, proactive in studies), B = Good (usually completes work, engaged), C = Almost Good (sometimes misses assignments, needs reminders), D = Not Good (frequently misses work, needs significant support)
+- Case-insensitive validation
+- Null values will be treated as "A" (Excellent)
+- **Expected Distribution**: Similar to behavior rank - most students should be A, then B, with steep drop to C, and D being rare
+- **Independent of Behavior Rank**: A student can have different behavior and studentiality rankings (e.g., well-behaved but struggles with homework completion)
+
 #### Assistance Package
 - Boolean values: true/false, 1/0, yes/no
 - Case-insensitive
@@ -90,13 +99,13 @@ The input CSV file must contain the following columns:
 ## Sample Input File
 
 ```csv
-student_id,first_name,last_name,gender,class,academic_score,behavior_rank,assistance_package,preferred_friend_1,preferred_friend_2,preferred_friend_3,disliked_peer_1,disliked_peer_2,disliked_peer_3,disliked_peer_4,disliked_peer_5,force_class,force_friend
-317328593,John,Smith,M,1,85.5,B,false,203765489,213568467,,456789123,891234567,,,,,
-203765489,Sarah,Johnson,F,1,92.0,A,false,317328593,456789123,,891234567,,,,203765489,213568467
-213568467,Ahmed,Ali,M,2,78.3,C,true,456789123,234567890,,317328593,891234567,,,203765489,213568467
-456789123,Maria,Garcia,F,2,88.7,B,false,203765489,213568467,,891234567,234567890,,,,
-891234567,David,Brown,M,3,91.2,A,false,317328593,234567890,,456789123,,,,3,
-234567890,Emma,Wilson,F,3,82.4,B,true,891234567,345678901,,317328593,456789123,,,,
+student_id,first_name,last_name,gender,class,academic_score,behavior_rank,studentiality_rank,assistance_package,preferred_friend_1,preferred_friend_2,preferred_friend_3,disliked_peer_1,disliked_peer_2,disliked_peer_3,disliked_peer_4,disliked_peer_5,force_class,force_friend
+317328593,John,Smith,M,1,85.5,B,A,false,203765489,213568467,,456789123,891234567,,,,,
+203765489,Sarah,Johnson,F,1,92.0,A,A,false,317328593,456789123,,891234567,,,,203765489,213568467
+213568467,Ahmed,Ali,M,2,78.3,C,B,true,456789123,234567890,,317328593,891234567,,,203765489,213568467
+456789123,Maria,Garcia,F,2,88.7,B,B,false,203765489,213568467,,891234567,234567890,,,,
+891234567,David,Brown,M,3,91.2,A,C,false,317328593,234567890,,456789123,,,,3,
+234567890,Emma,Wilson,F,3,82.4,B,A,true,891234567,345678901,,317328593,456789123,,,,
 ```
 
 ## Output CSV Formats
@@ -153,6 +162,7 @@ The school layer evaluates how balanced classes are when compared to each other.
 ### School Layer Balance Metrics
 - **Academic Score Balance**: Measures how similar average academic scores are across classes
 - **Behavior Rank Balance**: Measures how similar average behavior ranks are across classes  
+- **Studentiality Rank Balance**: Measures how similar average studentiality ranks are across classes
 - **Class Size Balance**: Measures how similar class sizes are across all classes
 - **Assistance Package Balance**: Measures how evenly assistance package students are distributed
 
@@ -165,6 +175,7 @@ The school layer evaluates how balanced classes are when compared to each other.
 A perfect school layer score (100) is achieved when all classes have:
 - Identical average academic scores
 - Identical average behavior ranks
+- Identical average studentiality ranks
 - Identical number of students
 - Identical number of assistance package students
 
@@ -188,6 +199,13 @@ The summary score combines all three layers using weighted averaging to produce 
 
 ### Behavior Rank Conversion
 For numerical calculations, behavior ranks are converted:
+- A = 1 (Excellent)
+- B = 2 (Good)
+- C = 3 (Almost Good)
+- D = 4 (Not Good)
+
+### Studentiality Rank Conversion
+For numerical calculations, studentiality ranks are converted:
 - A = 1 (Excellent)
 - B = 2 (Good)
 - C = 3 (Almost Good)

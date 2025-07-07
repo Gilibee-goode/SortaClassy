@@ -21,7 +21,8 @@ class Student:
     gender: str
     class_id: str
     academic_score: float
-    behavior_rank: str  # A-E format
+    behavior_rank: str  # A-D format
+    studentiality_rank: str  # A-D format
     assistance_package: bool
     preferred_friend_1: str = ""
     preferred_friend_2: str = ""
@@ -41,6 +42,7 @@ class Student:
         self.validate_gender()
         self.validate_academic_score()
         self.validate_behavior_rank()
+        self.validate_studentiality_rank()
         self.validate_force_constraints()
         
     def validate_student_id(self) -> None:
@@ -82,6 +84,13 @@ class Student:
         # Normalize to uppercase
         self.behavior_rank = self.behavior_rank.upper()
         
+    def validate_studentiality_rank(self) -> None:
+        """Validate studentiality rank is A-D."""
+        if self.studentiality_rank.upper() not in ['A', 'B', 'C', 'D']:
+            raise ValueError(f"Studentiality rank must be A-D, got: {self.studentiality_rank}")
+        # Normalize to uppercase
+        self.studentiality_rank = self.studentiality_rank.upper()
+        
     def validate_force_constraints(self) -> None:
         """Validate force constraint formats."""
         # force_class can be empty or any string (will be validated against existing classes later)
@@ -97,6 +106,11 @@ class Student:
         """Convert string behavior rank to numeric value for calculations."""
         conversion = {"A": 1, "B": 2, "C": 3, "D": 4}
         return conversion.get(self.behavior_rank.upper(), 1)
+        
+    def get_numeric_studentiality_rank(self) -> int:
+        """Convert string studentiality rank to numeric value for calculations."""
+        conversion = {"A": 1, "B": 2, "C": 3, "D": 4}
+        return conversion.get(self.studentiality_rank.upper(), 1)
         
     def get_preferred_friends(self) -> List[str]:
         """Get list of non-empty preferred friends."""
@@ -168,6 +182,13 @@ class ClassData:
         if not self.students:
             return 1.0  # Default to 'A' equivalent
         return sum(s.get_numeric_behavior_rank() for s in self.students) / len(self.students)
+        
+    @property
+    def average_studentiality_rank(self) -> float:
+        """Get average numeric studentiality rank for this class."""
+        if not self.students:
+            return 1.0  # Default to 'A' equivalent
+        return sum(s.get_numeric_studentiality_rank() for s in self.students) / len(self.students)
         
     @property
     def assistance_count(self) -> int:

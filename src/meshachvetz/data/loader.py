@@ -160,6 +160,7 @@ class DataLoader:
             # Convert numeric fields
             academic_score = self._get_float_value(row, 'academic_score', default=0.0)
             behavior_rank = self._get_string_value(row, 'behavior_rank', default='A').upper()
+            studentiality_rank = self._get_string_value(row, 'studentiality_rank', default='A').upper()
             assistance_package = self._get_boolean_value(row, 'assistance_package', default=False)
             
             # Extract optional social preference fields
@@ -186,6 +187,7 @@ class DataLoader:
                 class_id=class_id,
                 academic_score=academic_score,
                 behavior_rank=behavior_rank,
+                studentiality_rank=studentiality_rank,
                 assistance_package=assistance_package,
                 preferred_friend_1=preferred_friend_1,
                 preferred_friend_2=preferred_friend_2,
