@@ -1,0 +1,113 @@
+# Advanced Optimizer Configuration for Meshachvetz
+# Week 5: Advanced Optimization Algorithms
+
+# Default optimization settings
+default_algorithm: "local_search"
+default_max_iterations: 1000
+min_friends: 1
+respect_force_constraints: true
+
+# Algorithm-specific configurations
+algorithms:
+  random_swap:
+    enabled: true
+    max_iterations: 1000
+    early_stop_threshold: 100
+    min_improvement: 0.01
+    
+  local_search:
+    enabled: true
+    max_passes: 10
+    min_improvement: 0.01
+    shuffle_students: true
+    greedy_mode: true  # Take first improvement vs best improvement
+    
+  simulated_annealing:
+    enabled: true
+    initial_temperature: 100.0
+    min_temperature: 0.01
+    cooling_rate: 0.95
+    cooling_schedule: "exponential"  # exponential, linear, logarithmic, adaptive
+    iterations_per_temperature: 50
+    swap_probability: 0.7  # vs single move
+    
+  genetic:
+    enabled: true
+    population_size: 50
+    max_generations: 100
+    elite_size: 5
+    crossover_rate: 0.8
+    mutation_rate: 0.1
+    tournament_size: 3
+    selection_method: "tournament"  # tournament, roulette, rank
+    convergence_generations: 10
+    
+# Multi-algorithm strategies
+multi_algorithm:
+  default_strategy: "parallel"  # parallel, sequential, best_of
+  default_algorithms: ["local_search", "simulated_annealing", "genetic"]
+  
+  strategies:
+    parallel:
+      description: "Run algorithms independently and compare results"
+      
+    sequential:
+      description: "Run algorithms in sequence, using output of one as input to next"
+      algorithm_order: ["genetic", "local_search", "simulated_annealing"]
+      
+    best_of:
+      description: "Run algorithms in parallel and return the best result"
+      
+# Initialization settings
+initialization:
+  default_strategy: "constraint_aware"
+  auto_calculate_classes: true
+  target_students_per_class: 25
+  
+  strategies:
+    random:
+      description: "Randomly assign students to classes"
+      
+    balanced:
+      description: "Ensure equal class sizes via round-robin distribution"
+      
+    constraint_aware:
+      description: "Balance all constraints and preferences during assignment"
+      
+    academic_balanced:
+      description: "Distribute students to balance academic scores across classes"
+
+# Performance optimization
+performance:
+  enable_caching: true
+  incremental_scoring: true
+  parallel_evaluation: false  # Future feature
+  memory_limit_mb: 1024
+
+# Constraint settings
+constraints:
+  minimum_friends:
+    default: 1
+    allow_override: true
+    max_allowed: 3
+    
+  force_constraints:
+    respect_force_class: true
+    respect_force_friend: true
+    allow_breaking_force_friend: false  # For special algorithms like SA/GA
+    
+  class_size:
+    min_students: 15
+    max_students: 35
+    ideal_range: [20, 30]
+
+# Logging and reporting
+logging:
+  level: "INFO"
+  detailed_progress: false
+  algorithm_comparison: true
+  
+reporting:
+  generate_reports: true
+  include_algorithm_metrics: true
+  save_intermediate_results: false 

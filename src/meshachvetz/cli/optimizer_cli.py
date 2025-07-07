@@ -85,9 +85,10 @@ Examples:
                                 help='Output file for optimized assignment (default: optimized_<input_file>)')
     optimize_parser.add_argument('--output-dir', type=validate_output_dir, 
                                 help='Output directory for all generated files')
-    optimize_parser.add_argument('--algorithm', '-a', type=str, choices=['random_swap'], 
-                                default='random_swap',
-                                help='Optimization algorithm to use (default: random_swap)')
+    optimize_parser.add_argument('--algorithm', '-a', type=str, 
+                                choices=['random_swap', 'local_search', 'simulated_annealing', 'genetic'],
+                                default='local_search',
+                                help='Optimization algorithm to use (default: local_search)')
     optimize_parser.add_argument('--max-iterations', type=int, default=1000,
                                 help='Maximum number of optimization iterations (default: 1000)')
     optimize_parser.add_argument('--config', '-c', type=str, 
@@ -147,6 +148,34 @@ Examples:
     generate_parser.add_argument('--quiet', '-q', action='store_true',
                                 help='Suppress non-essential output')
     
+    # Add compare command
+    compare_parser = subparsers.add_parser('compare', help='Compare multiple optimization algorithms')
+    compare_parser.add_argument('input_file', type=str, help='Input CSV file with student data')
+    compare_parser.add_argument('--algorithms', nargs='+', 
+                               choices=['random_swap', 'local_search', 'simulated_annealing', 'genetic'],
+                               default=['random_swap', 'local_search', 'simulated_annealing', 'genetic'],
+                               help='Algorithms to compare (default: all)')
+    compare_parser.add_argument('--max-iterations', type=int, default=500,
+                               help='Maximum iterations per algorithm (default: 500)')
+    compare_parser.add_argument('--output', '-o', type=str,
+                               help='Output file for comparison report (CSV format)')
+    compare_parser.add_argument('--strategy', type=str,
+                               choices=['parallel', 'sequential', 'best_of'],
+                               default='parallel',
+                               help='Multi-algorithm strategy (default: parallel)')
+    compare_parser.add_argument('--init-strategy', type=str,
+                               choices=['random', 'balanced', 'constraint_aware', 'academic_balanced'],
+                               default='constraint_aware',
+                               help='Initialization strategy for unassigned students (default: constraint_aware)')
+    compare_parser.add_argument('--target-classes', type=int, default=5,
+                               help='Number of target classes (default: 5, auto-calculated if set to 0)')
+    compare_parser.add_argument('--min-friends', type=int, default=1,
+                               help='Minimum friends constraint (default: 1)')
+    compare_parser.add_argument('--verbose', '-v', action='store_true',
+                               help='Enable verbose output')
+    compare_parser.add_argument('--quiet', '-q', action='store_true',
+                               help='Minimal output')
+
     # Parse arguments
     args = parser.parse_args()
     
@@ -170,6 +199,8 @@ Examples:
             handle_list_algorithms_command(args)
         elif args.command == 'generate-assignment':
             handle_generate_assignment_command(args)
+        elif args.command == 'compare':
+            handle_compare_command(args)
         else:
             parser.print_help()
             sys.exit(1)
@@ -436,6 +467,140 @@ def handle_generate_assignment_command(args):
             import traceback
             traceback.print_exc()
         sys.exit(1)
+
+
+def handle_compare_command(args):
+    """Handle the compare command for algorithm comparison."""
+    try:
+        # Configure logging
+        log_level = "DEBUG" if args.verbose else "WARNING" if args.quiet else "INFO"
+        setup_logging(log_level)
+        
+        # Load and validate data
+        print(f"📁 Loading data from: {args.input_file}")
+        
+        from meshachvetz.data.loader import DataLoader
+        from meshachvetz.scorer.main_scorer import Scorer
+        from meshachvetz.optimizer.optimization_manager import OptimizationManager
+        
+        loader = DataLoader(validate_data=True)
+        school_data = loader.load_csv(args.input_file)
+        
+        print(f"✅ Loaded {school_data.total_students} students")
+        
+        # Configure optimizer
+        config = {
+            'min_friends': args.min_friends,
+            'respect_force_constraints': True,
+            'allow_constraint_override': True
+        }
+        
+        scorer = Scorer()
+        optimization_manager = OptimizationManager(scorer, config)
+        
+        # Convert target_classes: 0 means auto-calculate (None), otherwise use the value
+        target_classes = None if args.target_classes == 0 else args.target_classes
+        
+        # Auto-initialize if needed
+        from meshachvetz.optimizer.optimization_manager import AssignmentStatus
+        assignment_status, unassigned_count = optimization_manager.detect_assignment_status(school_data)
+        
+        if assignment_status != AssignmentStatus.FULLY_ASSIGNED:
+            print(f"🔧 Initializing {unassigned_count} unassigned students using {args.init_strategy} strategy")
+            from meshachvetz.optimizer.optimization_manager import InitializationStrategy
+            school_data = optimization_manager.initialize_assignments(
+                school_data,
+                InitializationStrategy(args.init_strategy),
+                target_classes
+            )
+        
+        # Run algorithm comparison
+        print(f"🚀 Starting algorithm comparison with {args.strategy} strategy")
+        print(f"   Algorithms: {', '.join(args.algorithms)}")
+        print(f"   Max iterations per algorithm: {args.max_iterations}")
+        
+        if args.strategy == 'compare':
+            # Use the comprehensive comparison function
+            comparison = optimization_manager.run_algorithm_comparison(
+                school_data=school_data,
+                algorithms=args.algorithms,
+                max_iterations=args.max_iterations,
+                output_file=args.output
+            )
+            
+            # Display results
+            if not args.quiet:
+                print(f"\n🏆 ALGORITHM COMPARISON RESULTS")
+                print("="*50)
+                
+                # Show rankings
+                if 'rankings' in comparison and 'by_score' in comparison['rankings']:
+                    print("\n📊 Rankings by Final Score:")
+                    for i, (alg, score) in enumerate(comparison['rankings']['by_score'], 1):
+                        print(f"   {i}. {alg}: {score:.2f}/100")
+                
+                if 'performance_metrics' in comparison:
+                    metrics = comparison['performance_metrics']
+                    print(f"\n📈 Performance Summary:")
+                    if 'score_stats' in metrics:
+                        print(f"   Best Score: {metrics['score_stats']['best']:.2f}/100")
+                        print(f"   Average Score: {metrics['score_stats']['average']:.2f}/100")
+                        print(f"   Score Range: {metrics['score_stats']['best'] - metrics['score_stats']['worst']:.2f}")
+                    
+                    if 'time_stats' in metrics:
+                        print(f"   Fastest Algorithm: {metrics['time_stats']['fastest']:.2f}s")
+                        print(f"   Average Time: {metrics['time_stats']['average']:.2f}s")
+                
+                if args.output:
+                    print(f"\n💾 Detailed report saved to: {args.output}")
+        
+        else:
+            # Use multi-algorithm strategy
+            results = optimization_manager.optimize_with_multiple_algorithms(
+                school_data=school_data,
+                algorithms=args.algorithms,
+                max_iterations=args.max_iterations,
+                strategy=args.strategy
+            )
+            
+            # Display results
+            if not args.quiet:
+                print(f"\n🏆 MULTI-ALGORITHM RESULTS ({args.strategy.upper()})")
+                print("="*50)
+                
+                if args.strategy == 'best_of':
+                    best_result = results['best_result']
+                    best_algorithm = results['best_algorithm']
+                    print(f"🥇 Best Algorithm: {best_algorithm}")
+                    print(f"   Final Score: {best_result.final_score:.2f}/100")
+                    print(f"   Improvement: +{best_result.improvement:.2f}")
+                    print(f"   Time: {best_result.execution_time:.2f}s")
+                    
+                    if 'comparison_stats' in results:
+                        stats = results['comparison_stats']
+                        print(f"\n📊 Comparison Statistics:")
+                        print(f"   Score Range: {stats['worst_score']:.2f} - {stats['best_score']:.2f}")
+                        print(f"   Average Score: {stats['average_score']:.2f}")
+                
+                else:
+                    # Show all results
+                    for alg_name, result in results.items():
+                        if hasattr(result, 'final_score'):  # Skip non-result entries
+                            print(f"\n🔧 {alg_name}:")
+                            print(f"   Score: {result.initial_score:.2f} → {result.final_score:.2f} (+{result.improvement:.2f})")
+                            print(f"   Time: {result.execution_time:.2f}s")
+                            print(f"   Iterations: {result.iterations_completed}")
+        
+        print(f"\n✅ Algorithm comparison completed successfully!")
+        
+    except Exception as e:
+        print(f"❌ Error during algorithm comparison: {e}")
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
+        return 1
+    
+    return 0
 
 
 if __name__ == "__main__":

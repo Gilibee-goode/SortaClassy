@@ -35,41 +35,23 @@ Available Commands:
     status   Show configuration status and paths
 
 Examples:
-  # Score a CSV file with default settings
-  meshachvetz score students.csv
-
-  # Score with custom configuration and generate reports
-  meshachvetz score students.csv --config custom.yaml --reports
-
-  # Optimize student assignments (auto-initializes if needed)
+  # Get the best optimization result automatically (uses 3 best algorithms)
   meshachvetz optimize students.csv
 
-  # Optimize with custom parameters and initialization strategy
-  meshachvetz optimize students.csv --max-iterations 2000 --min-friends 2 --init-strategy balanced
+  # Score an existing assignment
+  meshachvetz score assigned_students.csv
 
-  # Optimize without auto-initialization (requires pre-assigned students)
-  meshachvetz optimize students.csv --no-auto-init
+  # Score with detailed reports
+  meshachvetz score students.csv --reports --output results/
 
-  # Generate initial assignment only (no optimization)
-  meshachvetz generate-assignment students.csv --strategy academic_balanced --target-classes 4
+  # Use a specific single algorithm
+  meshachvetz optimize students.csv --algorithm genetic
 
-  # Optimize and save to specific file
-  meshachvetz optimize students.csv --output optimized_assignment.csv
+  # Compare specific algorithms with parallel strategy
+  meshachvetz optimize students.csv --algorithms local_search genetic --strategy parallel
 
-  # Validate a CSV file
-  meshachvetz validate students.csv
-
-  # Show current configuration
-  meshachvetz config show
-
-  # Set a custom configuration as the new default
-  meshachvetz config set my_config.yaml
-
-  # Reset to original configuration
-  meshachvetz config reset
-
-  # Show configuration status
-  meshachvetz config status
+  # Optimize with custom parameters
+  meshachvetz optimize students.csv --max-iterations 2000 --target-classes 5
 
 For more help on a specific command:
   meshachvetz <command> --help
@@ -91,13 +73,29 @@ For more help on a specific command:
     score_parser.add_argument('--verbose', '-v', action='store_true', help='Enable verbose logging')
     score_parser.add_argument('--quiet', '-q', action='store_true', help='Suppress non-essential output')
     
-    # Optimize command
+    # Optimize command (now handles both single and multiple algorithms)
     optimize_parser = subparsers.add_parser('optimize', help='Optimize student class assignments')
     optimize_parser.add_argument('csv_file', help='Path to CSV file containing student data')
     optimize_parser.add_argument('--output', '-o', type=str, help='Output file for optimized assignment')
     optimize_parser.add_argument('--output-dir', type=str, help='Output directory for all generated files')
-    optimize_parser.add_argument('--algorithm', '-a', type=str, choices=['random_swap'], default='random_swap',
-                                help='Optimization algorithm to use (default: random_swap)')
+    
+    # Multiple algorithms option
+    optimize_parser.add_argument('--algorithms', nargs='+', 
+                               choices=['random_swap', 'local_search', 'simulated_annealing', 'genetic'],
+                               default=['local_search', 'simulated_annealing', 'genetic'],
+                               help='Multiple algorithms to compare (default: local_search, simulated_annealing, genetic)')
+    
+    # Multi-algorithm strategy (only used when --algorithms is specified)
+    optimize_parser.add_argument('--strategy', type=str,
+                               choices=['parallel', 'sequential', 'best_of'],
+                               default='best_of',
+                               help='Strategy when using multiple algorithms (default: best_of)')
+                               
+    # Single algorithm option (only used when explicitly specified)
+    optimize_parser.add_argument('--algorithm', '-a', type=str, 
+                                choices=['random_swap', 'local_search', 'simulated_annealing', 'genetic'], 
+                                help='Single optimization algorithm to use (overrides default multi-algorithm approach)')
+    
     optimize_parser.add_argument('--max-iterations', type=int, default=1000,
                                 help='Maximum number of optimization iterations (default: 1000)')
     optimize_parser.add_argument('--config', '-c', type=str, help='Path to YAML configuration file')
@@ -176,9 +174,30 @@ For more help on a specific command:
             sys.argv = ['scorer_cli.py', args.command] + sys.argv[2:]
             scorer_main()
         elif args.command == 'optimize':
-            # Delegate to optimizer CLI
-            sys.argv = ['optimizer_cli.py', args.command] + sys.argv[2:]
-            optimizer_main()
+            # Handle both single and multiple algorithm optimization
+            if hasattr(args, 'algorithm') and args.algorithm:
+                # Single algorithm explicitly specified - use single algorithm mode
+                sys.argv = ['optimizer_cli.py', 'optimize'] + sys.argv[2:]
+                optimizer_main()
+            else:
+                # Default to multi-algorithm approach with best algorithms
+                algorithms_to_use = args.algorithms  # Will be default list if not specified
+                sys.argv = ['optimizer_cli.py', 'compare', args.csv_file] + [
+                    '--algorithms'] + algorithms_to_use + [
+                    '--strategy', args.strategy,
+                    '--max-iterations', str(args.max_iterations),
+                    '--init-strategy', args.init_strategy,
+                    '--min-friends', str(args.min_friends)
+                ]
+                if args.target_classes:
+                    sys.argv.extend(['--target-classes', str(args.target_classes)])
+                if args.output:
+                    sys.argv.extend(['--output', args.output])
+                if args.verbose:
+                    sys.argv.append('--verbose')
+                if args.quiet:
+                    sys.argv.append('--quiet')
+                optimizer_main()
         elif args.command == 'config':
             if args.config_command == 'show':
                 # Handle config show

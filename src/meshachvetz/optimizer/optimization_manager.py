@@ -6,6 +6,7 @@ and provides a unified interface for student assignment optimization.
 
 import logging
 import os
+import copy
 from typing import Dict, List, Any, Optional, Union, Tuple
 from datetime import datetime
 import csv
@@ -13,6 +14,9 @@ from enum import Enum
 
 from .base_optimizer import BaseOptimizer, OptimizationResult
 from .random_swap import RandomSwapOptimizer
+from .local_search import LocalSearchOptimizer
+from .simulated_annealing import SimulatedAnnealingOptimizer
+from .genetic import GeneticOptimizer
 from ..data.models import SchoolData, Student, ClassData
 from ..scorer.main_scorer import Scorer
 
@@ -57,16 +61,16 @@ class OptimizationManager:
         
         # Default optimization parameters
         self.default_max_iterations = self.config.get('max_iterations', 1000)
-        self.default_algorithm = self.config.get('default_algorithm', 'random_swap')
+        self.default_algorithm = self.config.get('default_algorithm', 'local_search')
         
     def _register_algorithms(self) -> None:
         """Register available optimization algorithms."""
         self.algorithms = {
             'random_swap': RandomSwapOptimizer,
-            # Future algorithms will be added here:
-            # 'genetic': GeneticOptimizer,
-            # 'simulated_annealing': SimulatedAnnealingOptimizer,
-            # 'local_search': LocalSearchOptimizer,
+            'local_search': LocalSearchOptimizer,
+            'simulated_annealing': SimulatedAnnealingOptimizer,
+            'genetic': GeneticOptimizer,
+            # Future algorithms:
             # 'or_tools': ORToolsOptimizer
         }
     
@@ -194,7 +198,6 @@ class OptimizationManager:
         Returns:
             SchoolData with initialized assignments
         """
-        import copy
         
         # Create a working copy
         initialized_data = copy.deepcopy(school_data)
@@ -455,7 +458,8 @@ class OptimizationManager:
     
     def optimize_with_multiple_algorithms(self, school_data: SchoolData,
                                         algorithms: List[str] = None,
-                                        max_iterations: int = None) -> Dict[str, OptimizationResult]:
+                                        max_iterations: int = None,
+                                        strategy: str = "best_of") -> Dict[str, OptimizationResult]:
         """
         Run optimization with multiple algorithms and compare results.
         
@@ -463,23 +467,115 @@ class OptimizationManager:
             school_data: Initial school data to optimize
             algorithms: List of algorithm names to try
             max_iterations: Maximum iterations per algorithm
+            strategy: Multi-algorithm strategy ('parallel', 'sequential', 'best_of')
             
         Returns:
             Dictionary mapping algorithm names to their results
         """
-        algorithms = algorithms or self.get_available_algorithms()
+        algorithms = algorithms or ['local_search', 'simulated_annealing', 'genetic']
+        
+        # Filter to only available algorithms
+        available_algorithms = [alg for alg in algorithms if alg in self.algorithms]
+        
+        if not available_algorithms:
+            raise ValueError(f"No valid algorithms provided. Available: {list(self.algorithms.keys())}")
+        
+        self.logger.info(f"Running {strategy} strategy with algorithms: {available_algorithms}")
+        
+        if strategy == "sequential":
+            return self._sequential_optimization(school_data, available_algorithms, max_iterations)
+        elif strategy == "parallel":
+            return self._parallel_optimization(school_data, available_algorithms, max_iterations)
+        elif strategy == "best_of":
+            return self._best_of_optimization(school_data, available_algorithms, max_iterations)
+        else:
+            raise ValueError(f"Unknown multi-algorithm strategy: {strategy}")
+    
+    def _sequential_optimization(self, school_data: SchoolData, algorithms: List[str], 
+                               max_iterations: int = None) -> Dict[str, OptimizationResult]:
+        """
+        Run algorithms sequentially, using output of one as input to the next.
+        
+        Args:
+            school_data: Initial school data
+            algorithms: List of algorithms to run in sequence
+            max_iterations: Maximum iterations per algorithm
+            
+        Returns:
+            Dictionary of results from each algorithm
+        """
+        results = {}
+        current_solution = copy.deepcopy(school_data)
+        
+        # Distribute iterations among algorithms
+        iterations_per_algorithm = (max_iterations or 1000) // len(algorithms)
+        
+        for i, algorithm in enumerate(algorithms):
+            self.logger.info(f"Running sequential step {i+1}/{len(algorithms)}: {algorithm}")
+            
+            result = self.optimize(
+                school_data=current_solution,
+                algorithm=algorithm,
+                max_iterations=iterations_per_algorithm,
+                auto_initialize=False  # Don't re-initialize between algorithms
+            )
+            
+            results[f"{algorithm}_step_{i+1}"] = result
+            current_solution = result.optimized_school_data
+            
+            self.logger.info(f"{algorithm} completed: score {result.final_score:.2f}")
+        
+        # Add a final combined result
+        final_result = copy.deepcopy(results[f"{algorithms[-1]}_step_{len(algorithms)}"])
+        final_result.algorithm_name = f"Sequential: {' → '.join(algorithms)}"
+        results['sequential_combined'] = final_result
+        
+        return results
+    
+    def _parallel_optimization(self, school_data: SchoolData, algorithms: List[str], 
+                             max_iterations: int = None) -> Dict[str, OptimizationResult]:
+        """
+        Run multiple algorithms in parallel on identical copies of the data.
+        
+        Args:
+            school_data: Initial school data
+            algorithms: List of algorithms to run in parallel
+            max_iterations: Maximum iterations per algorithm
+            
+        Returns:
+            Dictionary of results from each algorithm
+        """
         results = {}
         
-        self.logger.info(f"Running comparison with algorithms: {algorithms}")
+        # Get initial score for fair comparison validation
+        initial_score = self.scorer.calculate_scores(school_data).final_score
+        self.logger.info(f"🏁 Fair comparison: All {len(algorithms)} algorithms starting from score {initial_score:.2f}")
         
         for algorithm in algorithms:
+            self.logger.info(f"Running parallel algorithm: {algorithm}")
+            
             try:
-                self.logger.info(f"Running {algorithm}...")
-                result = self.optimize(school_data, algorithm, max_iterations)
+                # Create identical copy for fair comparison
+                algorithm_data = copy.deepcopy(school_data)
+                
+                # Verify the copy has the same score
+                copy_score = self.scorer.calculate_scores(algorithm_data).final_score
+                if abs(copy_score - initial_score) > 0.001:
+                    self.logger.warning(f"⚠️  Score mismatch: {algorithm} starting with {copy_score:.2f} instead of {initial_score:.2f}")
+                else:
+                    self.logger.debug(f"✅ {algorithm} starting with correct score: {copy_score:.2f}")
+                
+                result = self.optimize(
+                    school_data=algorithm_data,
+                    algorithm=algorithm,
+                    max_iterations=max_iterations,
+                    auto_initialize=False  # Assume data is already initialized
+                )
+                
                 results[algorithm] = result
                 
                 self.logger.info(f"{algorithm} completed: "
-                               f"Score {result.final_score:.2f} "
+                               f"score {result.final_score:.2f} "
                                f"(+{result.improvement:.2f}) "
                                f"in {result.execution_time:.2f}s")
                 
@@ -488,6 +584,192 @@ class OptimizationManager:
                 # Continue with other algorithms
         
         return results
+    
+    def _best_of_optimization(self, school_data: SchoolData, algorithms: List[str], 
+                            max_iterations: int = None) -> Dict[str, OptimizationResult]:
+        """
+        Run algorithms in parallel and return the best result.
+        
+        Args:
+            school_data: Initial school data
+            algorithms: List of algorithms to run
+            max_iterations: Maximum iterations per algorithm
+            
+        Returns:
+            Dictionary with the best result and comparison data
+        """
+        # Run all algorithms in parallel
+        all_results = self._parallel_optimization(school_data, algorithms, max_iterations)
+        
+        if not all_results:
+            raise ValueError("No algorithms succeeded")
+            
+        # Log fair comparison summary
+        initial_score = self.scorer.calculate_scores(school_data).final_score
+        self.logger.info(f"🏁 Fair comparison summary:")
+        self.logger.info(f"   All {len(algorithms)} algorithms started from score {initial_score:.2f}")
+        
+        # Show final results
+        for alg, result in all_results.items():
+            self.logger.info(f"   {alg}: {initial_score:.2f} → {result.final_score:.2f} ({result.improvement:+.2f})")
+        
+        # Find the best result
+        best_algorithm = max(all_results.keys(), key=lambda alg: all_results[alg].final_score)
+        best_result = all_results[best_algorithm]
+        
+        # Create summary result
+        results = {
+            'best_result': best_result,
+            'best_algorithm': best_algorithm,
+            'all_results': all_results
+        }
+        
+        # Add comparison statistics
+        scores = [result.final_score for result in all_results.values()]
+        results['comparison_stats'] = {
+            'best_score': max(scores),
+            'worst_score': min(scores),
+            'average_score': sum(scores) / len(scores),
+            'score_range': max(scores) - min(scores)
+        }
+        
+        self.logger.info(f"Best algorithm: {best_algorithm} with score {best_result.final_score:.2f}")
+        
+        return results
+    
+    def run_algorithm_comparison(self, school_data: SchoolData, 
+                               algorithms: List[str] = None,
+                               max_iterations: int = None,
+                               output_file: str = None) -> Dict[str, Any]:
+        """
+        Run a comprehensive comparison of multiple algorithms.
+        
+        Args:
+            school_data: Initial school data to optimize
+            algorithms: List of algorithms to compare
+            max_iterations: Maximum iterations per algorithm
+            output_file: Optional file to save comparison results
+            
+        Returns:
+            Comprehensive comparison results
+        """
+        algorithms = algorithms or list(self.algorithms.keys())
+        
+        self.logger.info(f"Starting algorithm comparison with {len(algorithms)} algorithms")
+        
+        # Run parallel optimization
+        results = self._parallel_optimization(school_data, algorithms, max_iterations)
+        
+        # Log comprehensive fair comparison summary
+        initial_score = self.scorer.calculate_scores(school_data).final_score
+        self.logger.info(f"🏁 Algorithm comparison completed with fair starting conditions:")
+        self.logger.info(f"   All {len(algorithms)} algorithms started from score {initial_score:.2f}")
+        
+        # Calculate comparison metrics
+        comparison = {
+            'algorithms_tested': algorithms,
+            'results': results,
+            'rankings': {},
+            'performance_metrics': {}
+        }
+        
+        if results:
+            # Rank by final score
+            sorted_by_score = sorted(results.items(), key=lambda x: x[1].final_score, reverse=True)
+            comparison['rankings']['by_score'] = [(alg, result.final_score) for alg, result in sorted_by_score]
+            
+            # Rank by improvement
+            sorted_by_improvement = sorted(results.items(), key=lambda x: x[1].improvement, reverse=True)
+            comparison['rankings']['by_improvement'] = [(alg, result.improvement) for alg, result in sorted_by_improvement]
+            
+            # Rank by execution time
+            sorted_by_time = sorted(results.items(), key=lambda x: x[1].execution_time)
+            comparison['rankings']['by_speed'] = [(alg, result.execution_time) for alg, result in sorted_by_time]
+            
+            # Log ranking summaries
+            self.logger.info(f"🏆 Rankings:")
+            self.logger.info(f"   By Score: {sorted_by_score[0][0]} ({sorted_by_score[0][1]:.2f})")
+            self.logger.info(f"   By Improvement: {sorted_by_improvement[0][0]} ({sorted_by_improvement[0][1]:+.2f})")
+            self.logger.info(f"   By Speed: {sorted_by_time[0][0]} ({sorted_by_time[0][1]:.2f}s)")
+            
+            # Calculate aggregate metrics
+            scores = [result.final_score for result in results.values()]
+            improvements = [result.improvement for result in results.values()]
+            times = [result.execution_time for result in results.values()]
+            
+            comparison['performance_metrics'] = {
+                'score_stats': {
+                    'best': max(scores),
+                    'worst': min(scores),
+                    'average': sum(scores) / len(scores),
+                    'std_dev': (sum((s - sum(scores)/len(scores))**2 for s in scores) / len(scores))**0.5
+                },
+                'improvement_stats': {
+                    'best': max(improvements),
+                    'worst': min(improvements),
+                    'average': sum(improvements) / len(improvements)
+                },
+                'time_stats': {
+                    'fastest': min(times),
+                    'slowest': max(times),
+                    'average': sum(times) / len(times)
+                }
+            }
+        
+        # Save results if requested
+        if output_file:
+            self._save_comparison_report(comparison, output_file)
+        
+        return comparison
+    
+    def _save_comparison_report(self, comparison: Dict[str, Any], output_file: str) -> None:
+        """Save algorithm comparison report to CSV file."""
+        import csv
+        import os
+        
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+        
+        with open(output_file, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            
+            # Write header
+            writer.writerow(['Algorithm Comparison Report'])
+            writer.writerow(['Generated:', datetime.now().strftime('%Y-%m-%d %H:%M:%S')])
+            writer.writerow([])
+            
+            # Write rankings
+            writer.writerow(['Rankings by Final Score:'])
+            writer.writerow(['Rank', 'Algorithm', 'Score'])
+            for i, (alg, score) in enumerate(comparison['rankings']['by_score'], 1):
+                writer.writerow([i, alg, f"{score:.2f}"])
+            writer.writerow([])
+            
+            writer.writerow(['Rankings by Improvement:'])
+            writer.writerow(['Rank', 'Algorithm', 'Improvement'])
+            for i, (alg, improvement) in enumerate(comparison['rankings']['by_improvement'], 1):
+                writer.writerow([i, alg, f"{improvement:.2f}"])
+            writer.writerow([])
+            
+            writer.writerow(['Rankings by Speed:'])
+            writer.writerow(['Rank', 'Algorithm', 'Time (seconds)'])
+            for i, (alg, time) in enumerate(comparison['rankings']['by_speed'], 1):
+                writer.writerow([i, alg, f"{time:.2f}"])
+            writer.writerow([])
+            
+            # Write detailed results
+            writer.writerow(['Detailed Results:'])
+            writer.writerow(['Algorithm', 'Initial Score', 'Final Score', 'Improvement', 'Time', 'Iterations'])
+            for alg, result in comparison['results'].items():
+                writer.writerow([
+                    alg,
+                    f"{result.initial_score:.2f}",
+                    f"{result.final_score:.2f}",
+                    f"{result.improvement:.2f}",
+                    f"{result.execution_time:.2f}",
+                    result.iterations_completed
+                ])
+        
+        self.logger.info(f"Algorithm comparison report saved to: {output_file}")
     
     def get_best_result(self, results: Dict[str, OptimizationResult]) -> OptimizationResult:
         """

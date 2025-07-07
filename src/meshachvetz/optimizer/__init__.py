@@ -1,21 +1,25 @@
 #!/usr/bin/env python3
 """
-Meshachvetz Optimizer Package - Student assignment optimization algorithms and management.
-
-This package provides optimization algorithms for improving student class assignments
-based on the three-layer scoring system. It includes various optimization strategies
-and a unified management interface.
+Optimizer package for Meshachvetz - contains optimization algorithms and management.
 """
 
 from .base_optimizer import BaseOptimizer, OptimizationResult
 from .random_swap import RandomSwapOptimizer
-from .optimization_manager import OptimizationManager
+from .local_search import LocalSearchOptimizer
+from .simulated_annealing import SimulatedAnnealingOptimizer
+from .genetic import GeneticOptimizer
+from .optimization_manager import OptimizationManager, AssignmentStatus, InitializationStrategy
 
 __all__ = [
     'BaseOptimizer',
-    'OptimizationResult', 
+    'OptimizationResult',
     'RandomSwapOptimizer',
-    'OptimizationManager'
+    'LocalSearchOptimizer',
+    'SimulatedAnnealingOptimizer',
+    'GeneticOptimizer',
+    'OptimizationManager',
+    'AssignmentStatus',
+    'InitializationStrategy'
 ]
 
 __version__ = "1.0.0" 
