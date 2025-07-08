@@ -250,8 +250,8 @@ class OptimizationManager:
         """Initialize assignments randomly."""
         import random
         
-        # Create class IDs
-        class_ids = [f"Class_{i+1}" for i in range(target_classes)]
+        # Create class IDs - use numbers instead of "Class_N" format
+        class_ids = [str(i+1) for i in range(target_classes)]
         
         # Initialize empty classes
         school_data.classes = {class_id: ClassData(class_id, []) for class_id in class_ids}
@@ -284,8 +284,8 @@ class OptimizationManager:
         """Initialize assignments with balanced class sizes."""
         import random
         
-        # Create class IDs
-        class_ids = [f"Class_{i+1}" for i in range(target_classes)]
+        # Create class IDs - use numbers instead of "Class_N" format
+        class_ids = [str(i+1) for i in range(target_classes)]
         
         # Initialize empty classes
         school_data.classes = {class_id: ClassData(class_id, []) for class_id in class_ids}
@@ -321,8 +321,8 @@ class OptimizationManager:
         """Initialize assignments with awareness of constraints and preferences."""
         import random
         
-        # Create class IDs
-        class_ids = [f"Class_{i+1}" for i in range(target_classes)]
+        # Create class IDs - use numbers instead of "Class_N" format
+        class_ids = [str(i+1) for i in range(target_classes)]
         
         # Initialize empty classes
         school_data.classes = {class_id: ClassData(class_id, []) for class_id in class_ids}
@@ -377,8 +377,8 @@ class OptimizationManager:
         """Initialize assignments with academic balance across classes."""
         import random
         
-        # Create class IDs
-        class_ids = [f"Class_{i+1}" for i in range(target_classes)]
+        # Create class IDs - use numbers instead of "Class_N" format
+        class_ids = [str(i+1) for i in range(target_classes)]
         
         # Initialize empty classes
         school_data.classes = {class_id: ClassData(class_id, []) for class_id in class_ids}

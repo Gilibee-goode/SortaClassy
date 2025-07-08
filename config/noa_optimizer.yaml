@@ -5,8 +5,8 @@
 # Scoring weights (most important part)
 weights:
   student_layer:
-    friends: 0.7        # Weight for placing students with their preferred friends
-    dislikes: 0.3       # Weight for separating students from disliked peers
+    friends: 0.9        # Weight for placing students with their preferred friends
+    dislikes: 0.1       # Weight for separating students from disliked peers
     
   class_layer:
     gender_balance: 1.0  # Weight for maintaining gender balance within classes
@@ -19,9 +19,9 @@ weights:
     assistance_balance: 0.10      # Weight for assistance package distribution
     
   layers:
-    student: 0.55   # Primary focus: Individual student satisfaction
+    student: 0.70   # Primary focus: Individual student satisfaction
     class: 0.05     # Minimal focus: Gender balance within classes
-    school: 0.4     # Secondary focus: School-wide balance metrics
+    school: 0.25     # Secondary focus: School-wide balance metrics
 
 # Optimization parameters
 optimization:

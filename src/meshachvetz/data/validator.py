@@ -384,15 +384,22 @@ class DataValidator:
             row_num = int(index) + 1
             
             force_class = row.get('force_class')
+            current_class = str(row.get('class', '')).strip()
+            
             if not pd.isna(force_class) and str(force_class).strip():
                 force_class_str = str(force_class).strip()
-                if force_class_str not in all_class_ids:
-                    self.errors.append(f"Row {row_num}: force_class references non-existent class: {force_class_str}")
+                
+                # Skip force_class validation if no classes exist yet (initialization case)
+                if not all_class_ids:
+                    continue
                     
-                # Check if student is actually in the forced class
-                current_class = str(row.get('class', '')).strip()
-                if current_class != force_class_str:
-                    self.errors.append(f"Row {row_num}: Student has force_class '{force_class_str}' but is in class '{current_class}'")
+                # Only validate force_class against existing classes if there are any assignments
+                if all_class_ids and force_class_str not in all_class_ids:
+                    self.warnings.append(f"Row {row_num}: force_class references non-existent class: {force_class_str}")
+                    
+                # Only validate class match if the student has a current class assignment
+                if current_class and current_class != force_class_str:
+                    self.warnings.append(f"Row {row_num}: Student has force_class '{force_class_str}' but is in class '{current_class}'")
                     
         # Validate force_friend constraints
         force_groups = {}
@@ -426,11 +433,12 @@ class DataValidator:
                 except Exception as e:
                     self.errors.append(f"Row {row_num}: Invalid force_friend format: {force_friend_str}")
                     
-        # Validate force friend groups are in same class
+        # Only validate force friend groups are in same class if they have class assignments
         for group_id, students in force_groups.items():
             if len(students) > 1:
-                classes = set(s['class_id'] for s in students)
-                if len(classes) > 1:
+                # Get non-empty class assignments
+                assigned_classes = set(s['class_id'] for s in students if s['class_id'])
+                if len(assigned_classes) > 1:
                     student_info = [f"Student {s['student_id']} (row {s['row_num']}) in class {s['class_id']}" for s in students]
                     self.errors.append(f"Force friend group '{group_id}' has students in different classes: {'; '.join(student_info)}")
                     
