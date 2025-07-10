@@ -40,6 +40,9 @@ class DataLoader:
         self.validate_data = validate_data
         self.validator = DataValidator() if validate_data else None
         self.imputation_stats = {}  # Store imputation statistics
+        self.original_columns = []  # Store original column order from input CSV
+        self.original_dataframe = None  # Store original DataFrame for column preservation
+        self.class_column_added = False  # Track if class column was missing and added
         
     def load_csv(self, file_path: str) -> SchoolData:
         """
@@ -58,6 +61,11 @@ class DataLoader:
         try:
             # Load CSV file
             df = self._load_csv_file(file_path)
+            
+            # Store original column structure for later use in output generation
+            self.original_columns = list(df.columns)
+            self.original_dataframe = df.copy()  # Keep original for column structure
+            self.class_column_added = False
             
             # Handle missing class column by auto-creating it
             df = self._handle_missing_columns(df)
@@ -82,6 +90,11 @@ class DataLoader:
                 school_data = SchoolData.from_students_list_with_unassigned(students)
             else:
                 school_data = SchoolData.from_students_list(students)
+            
+            # Store original column metadata in SchoolData for use in output generation
+            school_data._original_columns = self.original_columns
+            school_data._class_column_added = self.class_column_added
+            school_data._original_dataframe = self.original_dataframe
             
             return school_data
             
@@ -111,6 +124,7 @@ class DataLoader:
         if 'class' not in df_handled.columns:
             print("⚠️  Missing 'class' column - creating with empty values (will need assignment generation)")
             df_handled['class'] = ''  # Empty string indicates unassigned
+            self.class_column_added = True  # Track that we added the class column
             
         return df_handled
     

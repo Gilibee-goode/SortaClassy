@@ -586,6 +586,47 @@ outputs/baseline_test_data_random-swap_20runs_2025-07-10_15-45-12/
 └── baseline_summary.txt        # Comprehensive analysis report
 ```
 
+### Dynamic CSV Column Preservation
+
+**New Feature:** The output system now preserves the exact column structure from input CSV files, allowing users to add custom columns without losing them in the output.
+
+#### How It Works
+
+1. **Original Column Tracking:** When loading CSV files, the system stores the original column order and names
+2. **Class Column Handling:** If the input CSV is missing a 'class' column, it's automatically added after the 'gender' column
+3. **Dynamic Output Generation:** The optimized CSV output preserves all original columns in their original order
+4. **Unknown Column Support:** Any extra columns not part of the standard Student model are preserved as empty strings in output
+
+#### Example
+
+**Input CSV with extra columns:**
+```csv
+student_id,first_name,last_name,gender,academic_score,behavior_rank,studentiality_rank,assistance_package,extra_data,school,notes,preferred_friend_1,...
+203765489,Sarah,Johnson,F,92.0,A,A,false,value1,School A,Important note,317328593,...
+```
+
+**Output CSV preserves structure:**
+```csv
+student_id,first_name,last_name,gender,class,academic_score,behavior_rank,studentiality_rank,assistance_package,extra_data,school,notes,preferred_friend_1,...
+203765489,Sarah,Johnson,F,1,92.0,A,A,false,,School A,,317328593,...
+```
+
+**Note:** Custom column values are preserved as empty strings since they're not part of the Student data model, but the column structure remains intact.
+
+#### Technical Implementation
+
+- **DataLoader Enhancement:** Stores `_original_columns`, `_class_column_added`, and `_original_dataframe` metadata
+- **SchoolData Extension:** Added optional attributes to preserve CSV structure information
+- **OptimizationManager Update:** `_save_assignment_csv` method now uses dynamic column structure
+- **Backward Compatibility:** Systems without metadata fall back to standard column structure
+
+#### Benefits
+
+1. **Custom Column Support:** Users can add workflow-specific columns (notes, IDs, metadata) without losing them
+2. **Exact Column Preservation:** Output files maintain the exact same column order as input files
+3. **Workflow Integration:** Enables seamless integration with existing data processing workflows
+4. **Backward Compatibility:** Existing files and systems continue to work without changes
+
 ### Benefits
 
 1. **Organization:** All outputs are contained in a single `outputs/` directory
@@ -595,6 +636,7 @@ outputs/baseline_test_data_random-swap_20runs_2025-07-10_15-45-12/
 5. **Metadata Tracking:** Operation info files provide complete context
 6. **Automatic Cleanup:** Old runs are automatically removed to save disk space
 7. **Backward Compatibility:** Explicit output paths still work for legacy scripts
+8. **Column Preservation:** Input CSV column structure is exactly preserved in output files
 
 ## Performance Specifications
 

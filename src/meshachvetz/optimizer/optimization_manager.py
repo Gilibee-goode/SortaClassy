@@ -972,7 +972,10 @@ class OptimizationManager:
     
     def _save_assignment_csv(self, school_data: SchoolData, output_file: str) -> None:
         """
-        Save optimized student assignments to CSV file.
+        Save optimized student assignments to CSV file, preserving original column structure.
+        
+        This method creates an exact copy of the input CSV structure, preserving all original 
+        columns and only adding the 'class' column if it was missing in the original input.
         
         Args:
             school_data: Optimized school data
@@ -986,18 +989,43 @@ class OptimizationManager:
         if output_dir:
             os.makedirs(output_dir, exist_ok=True)
         
-        with open(output_file, 'w', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f)
+        # Determine column structure to use
+        if (hasattr(school_data, '_original_columns') and 
+            school_data._original_columns is not None):
+            # Use original column structure from input CSV
+            columns = school_data._original_columns.copy()
             
-            # Write header (same format as input CSV)
-            writer.writerow([
+            # Add 'class' column if it was missing in the original
+            if (hasattr(school_data, '_class_column_added') and 
+                school_data._class_column_added and 
+                'class' not in columns):
+                # Insert 'class' column after 'gender' for logical placement
+                if 'gender' in columns:
+                    gender_index = columns.index('gender')
+                    columns.insert(gender_index + 1, 'class')
+                else:
+                    # Fallback: add at the beginning
+                    columns.insert(0, 'class')
+                    
+            # Ensure 'class' column is present (safety check)
+            if 'class' not in columns:
+                columns.append('class')
+        else:
+            # Fallback to standard column structure for backward compatibility
+            columns = [
                 'student_id', 'first_name', 'last_name', 'gender', 'class',
-                'academic_score', 'behavior_rank', 'assistance_package',
-                'preferred_friend_1', 'preferred_friend_2', 'preferred_friend_3',
+                'academic_score', 'behavior_rank', 'studentiality_rank', 'assistance_package',
+                'school', 'preferred_friend_1', 'preferred_friend_2', 'preferred_friend_3',
                 'disliked_peer_1', 'disliked_peer_2', 'disliked_peer_3', 
                 'disliked_peer_4', 'disliked_peer_5',
                 'force_class', 'force_friend'
-            ])
+            ]
+        
+        with open(output_file, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            
+            # Write header using dynamic column structure
+            writer.writerow(columns)
             
             # Write student data sorted by class and then by student ID
             for class_id in sorted(school_data.classes.keys()):
@@ -1005,26 +1033,74 @@ class OptimizationManager:
                 sorted_students = sorted(class_data.students, key=lambda s: s.student_id)
                 
                 for student in sorted_students:
-                    writer.writerow([
-                        student.student_id,
-                        student.first_name,
-                        student.last_name,
-                        student.gender,
-                        student.class_id,
-                        student.academic_score,
-                        student.behavior_rank,
-                        'true' if student.assistance_package else 'false',
-                        student.preferred_friend_1 or '',
-                        student.preferred_friend_2 or '',
-                        student.preferred_friend_3 or '',
-                        student.disliked_peer_1 or '',
-                        student.disliked_peer_2 or '',
-                        student.disliked_peer_3 or '',
-                        student.disliked_peer_4 or '',
-                        student.disliked_peer_5 or '',
-                        student.force_class or '',
-                        student.force_friend or ''
-                    ])
+                    row = []
+                    for column in columns:
+                        value = self._get_student_column_value(student, column)
+                        row.append(value)
+                    writer.writerow(row)
+    
+    def _get_student_column_value(self, student: Student, column: str) -> str:
+        """
+        Get the value for a specific column from a student object.
+        
+        Args:
+            student: Student object
+            column: Column name
+            
+        Returns:
+            String value for the column
+        """
+        # Handle standard columns
+        if column == 'student_id':
+            return student.student_id
+        elif column == 'first_name':
+            return student.first_name
+        elif column == 'last_name':
+            return student.last_name
+        elif column == 'gender':
+            return student.gender
+        elif column == 'class':
+            return student.class_id
+        elif column == 'academic_score':
+            return str(student.academic_score)
+        elif column == 'behavior_rank':
+            return student.behavior_rank
+        elif column == 'studentiality_rank':
+            return student.studentiality_rank
+        elif column == 'assistance_package':
+            return 'true' if student.assistance_package else 'false'
+        elif column == 'school':
+            return student.school or ''
+        elif column == 'preferred_friend_1':
+            return student.preferred_friend_1 or ''
+        elif column == 'preferred_friend_2':
+            return student.preferred_friend_2 or ''
+        elif column == 'preferred_friend_3':
+            return student.preferred_friend_3 or ''
+        elif column == 'disliked_peer_1':
+            return student.disliked_peer_1 or ''
+        elif column == 'disliked_peer_2':
+            return student.disliked_peer_2 or ''
+        elif column == 'disliked_peer_3':
+            return student.disliked_peer_3 or ''
+        elif column == 'disliked_peer_4':
+            return student.disliked_peer_4 or ''
+        elif column == 'disliked_peer_5':
+            return student.disliked_peer_5 or ''
+        elif column == 'force_class':
+            return student.force_class or ''
+        elif column == 'force_friend':
+            return student.force_friend or ''
+        else:
+            # Handle unknown columns by looking in original dataframe if available
+            # This preserves any extra columns that were in the original CSV
+            if (hasattr(student, '_original_data') and 
+                student._original_data is not None and 
+                column in student._original_data):
+                return str(student._original_data[column])
+            else:
+                # Default to empty string for unknown columns
+                return ''
     
     def _save_optimization_report(self, result: OptimizationResult, output_file: str) -> None:
         """

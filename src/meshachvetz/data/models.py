@@ -330,6 +330,11 @@ class SchoolData:
     classes: Dict[str, ClassData]
     students: Dict[str, Student]
     
+    # Optional attributes for preserving original CSV structure
+    _original_columns: Optional[List[str]] = None
+    _class_column_added: bool = False
+    _original_dataframe: Optional[object] = None  # Will store pandas DataFrame
+    
     def __post_init__(self):
         """Validate school data after initialization."""
         if not isinstance(self.classes, dict):
