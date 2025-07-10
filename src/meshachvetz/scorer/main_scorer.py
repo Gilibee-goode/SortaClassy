@@ -9,9 +9,11 @@ import os
 import csv
 from datetime import datetime
 from dataclasses import dataclass
+from pathlib import Path
 from ..data.models import SchoolData
 from ..data.loader import DataLoader
 from ..utils.config import Config
+from ..utils.output_manager import OutputManager
 from .student_scorer import StudentScorer
 from .class_scorer import ClassScorer
 from .school_scorer import SchoolScorer
@@ -64,6 +66,9 @@ class Scorer:
         
         # Initialize data loader
         self.data_loader = DataLoader(validate_data=True)
+        
+        # Initialize output manager
+        self.output_manager = OutputManager()
         
     def load_data(self, csv_file: str) -> SchoolData:
         """
@@ -370,26 +375,46 @@ class Scorer:
                                       for s in result.student_scores.values())
         } 
 
-    def generate_csv_reports(self, result: ScoringResult, output_dir: str = None) -> str:
+    def generate_csv_reports(self, result: ScoringResult, output_dir: str = None, input_file: str = None) -> str:
         """
         Generate comprehensive CSV reports for the scoring results.
         
         Args:
             result: ScoringResult object containing all scoring data
-            output_dir: Directory to save reports. If None, creates timestamp-based directory
+            output_dir: Directory to save reports. If None, creates descriptive directory using OutputManager
+            input_file: Path to input CSV file (used for descriptive directory naming)
             
         Returns:
             Path to the output directory containing all reports
         """
-        # Create output directory with timestamp if not provided
+        # Use OutputManager to create descriptive directory if not provided
         if output_dir is None:
-            timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            output_dir = f"results_{timestamp}"
-        
-        # Create directory if it doesn't exist
-        os.makedirs(output_dir, exist_ok=True)
+            if input_file:
+                output_path = self.output_manager.create_scoring_directory(input_file)
+            else:
+                # Fallback to generic timestamp-based directory
+                output_path = self.output_manager.create_operation_directory("score")
+            output_dir = str(output_path)
+        else:
+            # Use provided directory but ensure it exists
+            output_path = Path(output_dir)
+            output_path.mkdir(parents=True, exist_ok=True)
         
         self.logger.info(f"Generating CSV reports in directory: {output_dir}")
+        
+        # Save operation information
+        if input_file:
+            operation_info = {
+                "Operation": "Score Assignment",
+                "Input File": input_file,
+                "Final Score": f"{result.final_score:.2f}/100",
+                "Total Students": result.total_students,
+                "Total Classes": result.total_classes,
+                "Student Layer Score": f"{result.student_layer_score:.2f}/100",
+                "Class Layer Score": f"{result.class_layer_score:.2f}/100",
+                "School Layer Score": f"{result.school_layer_score:.2f}/100"
+            }
+            self.output_manager.save_operation_info(output_path, operation_info)
         
         # Generate individual reports
         self._generate_summary_report(result, output_dir)
@@ -662,7 +687,7 @@ class Scorer:
         
         Args:
             csv_file: Path to CSV file containing student data
-            output_dir: Directory to save reports. If None, creates timestamp-based directory
+            output_dir: Directory to save reports. If None, creates descriptive directory using OutputManager
             
         Returns:
             Tuple of (ScoringResult, output_directory_path)
@@ -670,7 +695,7 @@ class Scorer:
         # Score the file
         result = self.score_csv_file(csv_file)
         
-        # Generate reports
-        output_path = self.generate_csv_reports(result, output_dir)
+        # Generate reports with input file information
+        output_path = self.generate_csv_reports(result, output_dir, csv_file)
         
         return result, output_path 

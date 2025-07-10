@@ -252,16 +252,17 @@ def handle_optimize_command(args):
         else:
             print(f"   Automatic initialization disabled")
     
-    # Create output paths
+    # Create output paths (let OutputManager handle if neither output nor output_dir specified)
     if args.output:
         output_file = args.output
-    else:
+    elif args.output_dir:
+        # User specified output directory, create filename
         input_path = Path(args.csv_file)
-        output_file = str(input_path.parent / f"optimized_{input_path.name}")
-    
-    if args.output_dir:
         output_path = Path(args.output_dir)
-        output_file = str(output_path / Path(output_file).name)
+        output_file = str(output_path / f"optimized_{input_path.name}")
+    else:
+        # Let OutputManager create descriptive directory and filename
+        output_file = None
     
     # Show logging level information
     if not args.quiet:
@@ -279,6 +280,7 @@ def handle_optimize_command(args):
         result, scoring_result = optimization_manager.optimize_and_save(
             school_data=school_data,
             output_file=output_file,
+            input_file=args.csv_file,
             algorithm=args.algorithm,
             max_iterations=args.max_iterations,
             initialization_strategy=args.init_strategy,
@@ -334,13 +336,29 @@ def handle_optimize_command(args):
                     print(f"     Iteration {iteration}: {score:.2f}")
         
         print(f"\n✅ Optimization completed successfully!")
-        print(f"📄 Optimized assignment saved to: {output_file}")
         
-        if args.reports:
-            output_dir = os.path.dirname(output_file) or "."
-            base_name = os.path.splitext(os.path.basename(output_file))[0]
-            reports_dir = os.path.join(output_dir, f"{base_name}_reports")
-            print(f"📊 Detailed reports available in: {reports_dir}")
+        # Handle output file path display (when using OutputManager, we need to get the actual path)
+        if output_file:
+            print(f"📄 Optimized assignment saved to: {output_file}")
+            if args.reports:
+                output_dir = os.path.dirname(output_file) or "."
+                base_name = os.path.splitext(os.path.basename(output_file))[0]
+                reports_dir = os.path.join(output_dir, f"{base_name}_reports")
+                print(f"📊 Detailed reports available in: {reports_dir}")
+        else:
+            # OutputManager was used - get the latest output directory
+            from pathlib import Path
+            outputs_dir = Path("outputs")
+            if outputs_dir.exists():
+                # Find most recent optimize directory
+                optimize_dirs = [d for d in outputs_dir.iterdir() if d.is_dir() and d.name.startswith("optimize_")]
+                if optimize_dirs:
+                    latest_dir = max(optimize_dirs, key=lambda d: d.stat().st_mtime)
+                    print(f"📄 Optimized assignment and reports saved to: {latest_dir}")
+                else:
+                    print(f"📄 Optimized assignment saved to: outputs/ directory")
+            else:
+                print(f"📄 Optimized assignment saved successfully")
             
     except Exception as e:
         print(f"❌ Optimization failed: {e}")
@@ -420,16 +438,17 @@ def handle_generate_assignment_command(args):
     if unassigned_count > 0:
         print(f"   Found {unassigned_count} unassigned students")
     
-    # Create output paths
+    # Create output paths (let OutputManager handle if neither output nor output_dir specified)
     if args.output:
         output_file = args.output
-    else:
+    elif args.output_dir:
+        # User specified output directory, create filename
         input_path = Path(args.csv_file)
-        output_file = str(input_path.parent / f"assignment_{input_path.name}")
-    
-    if args.output_dir:
         output_path = Path(args.output_dir)
-        output_file = str(output_path / Path(output_file).name)
+        output_file = str(output_path / f"assignment_{input_path.name}")
+    else:
+        # Let OutputManager create descriptive directory and filename
+        output_file = None
     
     print(f"🔧 Generating assignment with {args.strategy} strategy")
     
@@ -443,11 +462,12 @@ def handle_generate_assignment_command(args):
     
     try:
         result_data = optimization_manager.generate_initial_assignment(
-            school_data=school_data,
-            output_file=output_file,
-            strategy=args.strategy,
-            target_classes=target_classes
-        )
+                    school_data=school_data,
+        output_file=output_file,
+        input_file=args.csv_file,
+        strategy=args.strategy,
+        target_classes=target_classes
+    )
         
         # Get summary and score the result
         summary = optimization_manager.get_assignment_summary(result_data)
@@ -465,7 +485,24 @@ def handle_generate_assignment_command(args):
             print(f"Force friend groups: {summary['force_friend_groups']}")
         
         print(f"\n✅ Assignment generation completed successfully!")
-        print(f"📄 Generated assignment saved to: {output_file}")
+        
+        # Handle output file path display (when using OutputManager, we need to get the actual path)
+        if output_file:
+            print(f"📄 Generated assignment saved to: {output_file}")
+        else:
+            # OutputManager was used - get the latest output directory
+            from pathlib import Path
+            outputs_dir = Path("outputs")
+            if outputs_dir.exists():
+                # Find most recent generate directory
+                generate_dirs = [d for d in outputs_dir.iterdir() if d.is_dir() and d.name.startswith("generate_")]
+                if generate_dirs:
+                    latest_dir = max(generate_dirs, key=lambda d: d.stat().st_mtime)
+                    print(f"📄 Generated assignment saved to: {latest_dir}")
+                else:
+                    print(f"📄 Generated assignment saved to: outputs/ directory")
+            else:
+                print(f"📄 Generated assignment saved successfully")
             
     except Exception as e:
         print(f"❌ Assignment generation failed: {e}")

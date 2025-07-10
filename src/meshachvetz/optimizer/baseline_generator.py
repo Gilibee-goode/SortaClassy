@@ -16,6 +16,7 @@ from .random_swap import RandomSwapOptimizer
 from .base_optimizer import OptimizationResult
 from ..data.models import SchoolData
 from ..utils.logging import LogLevel
+from ..utils.output_manager import OutputManager
 
 
 class BaselineRun:
@@ -183,6 +184,9 @@ class BaselineGenerator:
         self.config = config or {}
         self.logger = logging.getLogger(__name__)
         
+        # Initialize output manager
+        self.output_manager = OutputManager()
+        
         # Baseline parameters
         self.num_runs = self.config.get('num_runs', 10)
         self.max_iterations_per_run = self.config.get('max_iterations_per_run', 1000)
@@ -266,13 +270,14 @@ class BaselineGenerator:
         
         return self.statistics
     
-    def save_baseline_report(self, output_dir: str, prefix: str = "baseline") -> Tuple[str, str]:
+    def save_baseline_report(self, output_dir: str = None, input_file: str = None, prefix: str = "baseline") -> Tuple[str, str]:
         """
-        Save comprehensive baseline reports to files.
+        Save comprehensive baseline reports to files using OutputManager.
         
         Args:
-            output_dir: Directory to save reports
-            prefix: Prefix for output files
+            output_dir: Directory to save reports (optional, uses OutputManager if None)
+            input_file: Path to input CSV file (used for descriptive directory naming)
+            prefix: Prefix for output files (ignored when using OutputManager)
             
         Returns:
             Tuple of (csv_file_path, summary_file_path)
@@ -280,13 +285,37 @@ class BaselineGenerator:
         if not self.statistics:
             raise ValueError("No baseline statistics available. Run generate_baseline() first.")
         
-        # Create output directory
-        Path(output_dir).mkdir(parents=True, exist_ok=True)
+        # Use OutputManager to create descriptive directory if not specified
+        if output_dir is None:
+            if input_file:
+                output_path = self.output_manager.create_baseline_directory(input_file, self.num_runs)
+            else:
+                output_path = self.output_manager.create_operation_directory("baseline", algorithm="random-swap")
+            output_dir = str(output_path)
+        else:
+            # Use provided directory but ensure it exists
+            output_path = Path(output_dir)
+            output_path.mkdir(parents=True, exist_ok=True)
         
-        # Generate filenames with timestamp
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        csv_file = Path(output_dir) / f"{prefix}_{timestamp}.csv"
-        summary_file = Path(output_dir) / f"{prefix}_summary_{timestamp}.txt"
+        # Create filenames (simplified when using OutputManager)
+        csv_file = Path(output_dir) / "baseline_data.csv"
+        summary_file = Path(output_dir) / "baseline_summary.txt"
+        
+        # Save operation information if using OutputManager
+        if input_file:
+            operation_info = {
+                "Operation": "Generate Baseline",
+                "Input File": input_file,
+                "Algorithm": "Random Swap",
+                "Number of Runs": self.num_runs,
+                "Iterations per Run": self.max_iterations_per_run,
+                "Mean Final Score": f"{self.statistics.final_score_mean:.2f}/100",
+                "Mean Improvement": f"{self.statistics.improvement_mean:.2f} ({self.statistics.improvement_pct_mean:.1f}%)",
+                "Mean Duration per Run": f"{self.statistics.duration_mean:.2f} seconds",
+                "Best Run Score": f"{self.statistics.final_score_max:.2f}/100",
+                "Worst Run Score": f"{self.statistics.final_score_min:.2f}/100"
+            }
+            self.output_manager.save_operation_info(output_path, operation_info)
         
         # Save CSV report
         self._save_csv_report(csv_file)

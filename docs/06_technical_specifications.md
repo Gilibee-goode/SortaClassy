@@ -1,5 +1,20 @@
 # Technical Specifications
 
+## Overview
+This document provides detailed technical specifications for the Meshachvetz student assignment optimization system, including APIs, data structures, algorithms, and implementation details.
+
+## Table of Contents
+1. [Data Models](#data-models)
+2. [Core APIs](#core-apis)
+3. [Scoring System](#scoring-system)
+4. [Optimization Algorithms](#optimization-algorithms)
+5. [Configuration System](#configuration-system)
+6. [Output Management System](#output-management-system)
+7. [Validation System](#validation-system)
+8. [Error Handling](#error-handling)
+9. [Performance Requirements](#performance-requirements)
+10. [Testing Framework](#testing-framework)
+
 ## System Architecture
 
 ### High-Level Architecture
@@ -370,6 +385,216 @@ def uniform_crossover(parent1: SchoolData, parent2: SchoolData) -> SchoolData:
 def random_mutation(individual: SchoolData, mutation_rate: float) -> SchoolData:
     """Randomly reassign students with given probability."""
 ```
+
+## Output Management System
+
+### OutputManager Class
+
+**Purpose:** Centralized output handling with descriptive directory naming and organized file management.
+
+**Location:** `src/meshachvetz/utils/output_manager.py`
+
+**Key Features:**
+- Descriptive directory naming based on operation type, input file, and algorithm
+- Automatic timestamp inclusion for chronological organization
+- Operation information tracking with detailed metadata
+- Cleanup of old runs to prevent disk space issues
+- Support for multiple output formats (CSV, TXT, JSON)
+
+#### OutputConfig
+
+```python
+@dataclass
+class OutputConfig:
+    """Configuration for output generation."""
+    base_dir: str = "outputs"
+    include_timestamp: bool = True
+    include_input_filename: bool = True
+    preserve_old_runs: bool = True
+    max_old_runs: int = 10
+    timestamp_format: str = "%Y-%m-%d_%H-%M-%S"
+```
+
+#### Main Methods
+
+```python
+class OutputManager:
+    def create_scoring_directory(self, input_file: str) -> Path:
+        """Create descriptive directory for scoring operations."""
+    
+    def create_optimization_directory(self, input_file: str, algorithm: str) -> Path:
+        """Create descriptive directory for optimization operations."""
+    
+    def create_baseline_directory(self, input_file: str, num_runs: int) -> Path:
+        """Create descriptive directory for baseline generation."""
+    
+    def create_generation_directory(self, input_file: str, strategy: str) -> Path:
+        """Create descriptive directory for assignment generation."""
+    
+    def save_operation_info(self, output_dir: Path, operation_info: Dict[str, Any]) -> None:
+        """Save operation metadata to operation_info.txt file."""
+    
+    def list_recent_runs(self, operation_type: str = None, limit: int = None) -> List[Dict[str, Any]]:
+        """List recent operation runs with metadata."""
+    
+    def get_latest_run(self, operation_type: str, input_file: str = None) -> Optional[Path]:
+        """Get the most recent run directory for specified operation type."""
+```
+
+#### Directory Naming Convention
+
+**Format:** `{operation}_{input_file_stem}_{algorithm}_{timestamp}`
+
+**Examples:**
+- `score_students_sample_2025-07-10_13-32-15/`
+- `optimize_large_dataset_local-search_2025-07-10_14-15-30/`
+- `baseline_test_data_random-swap_20runs_2025-07-10_15-45-12/`
+- `generate_unassigned_students_constraint-aware_2025-07-10_16-20-05/`
+
+#### Operation Information File
+
+Each output directory contains an `operation_info.txt` file with metadata:
+
+```text
+Meshachvetz Operation Information
+========================================
+Generated: 2025-07-10 13:32:44
+
+Operation: Optimize Assignment
+Input File: examples/sample_data/students_sample.csv
+Algorithm: Random Swap
+Initial Score: 68.13/100
+Final Score: 68.13/100
+Improvement: 0.00 (0.0%)
+Execution Time: 0.45 seconds
+Iterations: 100/100
+Constraints Satisfied: No
+```
+
+### Integration with Components
+
+#### Scorer Integration
+
+```python
+class Scorer:
+    def generate_csv_reports(self, result: ScoringResult, output_dir: str = None, input_file: str = None) -> str:
+        """
+        Generate comprehensive CSV reports using OutputManager for organization.
+        
+        Args:
+            result: ScoringResult object containing all scoring data
+            output_dir: Directory to save reports (optional, uses OutputManager if None)
+            input_file: Path to input CSV file (used for descriptive directory naming)
+            
+        Returns:
+            Path to the output directory containing all reports
+        """
+```
+
+#### Optimization Manager Integration
+
+```python
+class OptimizationManager:
+    def optimize_and_save(self, school_data: SchoolData,
+                         output_file: str = None,
+                         input_file: str = None,
+                         algorithm: str = None,
+                         max_iterations: int = None,
+                         initialization_strategy: str = "constraint_aware",
+                         auto_initialize: bool = True,
+                         generate_reports: bool = True,
+                         target_classes: Optional[int] = None) -> Tuple[OptimizationResult, Any]:
+        """
+        Optimize assignments and save results using OutputManager for organization.
+        
+        When output_file is None and input_file is provided, OutputManager creates
+        a descriptive directory structure automatically.
+        """
+```
+
+#### Baseline Generator Integration
+
+```python
+class BaselineGenerator:
+    def save_baseline_report(self, output_dir: str = None, input_file: str = None, prefix: str = "baseline") -> Tuple[str, str]:
+        """
+        Save comprehensive baseline reports using OutputManager for organization.
+        
+        When output_dir is None and input_file is provided, OutputManager creates
+        a descriptive directory structure automatically.
+        """
+```
+
+### CLI Integration
+
+All CLI commands now support automatic output organization:
+
+**Without Output Specification (uses OutputManager):**
+```bash
+meshachvetz score examples/sample_data/students_sample.csv --reports
+# Creates: outputs/score_students_sample_YYYY-MM-DD_HH-MM-SS/
+
+meshachvetz optimize examples/sample_data/students_sample.csv --algorithm local_search
+# Creates: outputs/optimize_students_sample_local-search_YYYY-MM-DD_HH-MM-SS/
+
+meshachvetz baseline examples/sample_data/students_sample.csv --runs 10
+# Creates: outputs/baseline_students_sample_random-swap_10runs_YYYY-MM-DD_HH-MM-SS/
+```
+
+**With Explicit Output (legacy mode):**
+```bash
+meshachvetz score input.csv --output results/ --reports
+# Creates: results/ (as specified)
+```
+
+### Output Structure Examples
+
+#### Scoring Output
+
+```
+outputs/score_students_sample_2025-07-10_13-32-15/
+├── operation_info.txt           # Operation metadata
+├── summary_report.csv           # Overall scoring summary
+├── student_details.csv          # Individual student scores
+├── class_details.csv            # Class-level analysis
+├── school_balance.csv           # School balance metrics
+└── configuration.csv            # Configuration used
+```
+
+#### Optimization Output
+
+```
+outputs/optimize_students_sample_local-search_2025-07-10_14-15-30/
+├── operation_info.txt           # Operation metadata
+├── optimized_students_sample.csv # Final optimized assignment
+├── optimization_report.csv     # Optimization progress and metrics
+└── scoring_reports/            # Detailed scoring analysis
+    ├── operation_info.txt
+    ├── summary_report.csv
+    ├── student_details.csv
+    ├── class_details.csv
+    ├── school_balance.csv
+    └── configuration.csv
+```
+
+#### Baseline Output
+
+```
+outputs/baseline_test_data_random-swap_20runs_2025-07-10_15-45-12/
+├── operation_info.txt          # Operation metadata
+├── baseline_data.csv           # Statistical data from all runs
+└── baseline_summary.txt        # Comprehensive analysis report
+```
+
+### Benefits
+
+1. **Organization:** All outputs are contained in a single `outputs/` directory
+2. **Descriptive Naming:** Directory names clearly indicate what operation was performed
+3. **No File Conflicts:** Timestamp-based naming prevents overwrites
+4. **Easy Navigation:** Chronological organization makes finding recent runs simple
+5. **Metadata Tracking:** Operation info files provide complete context
+6. **Automatic Cleanup:** Old runs are automatically removed to save disk space
+7. **Backward Compatibility:** Explicit output paths still work for legacy scripts
 
 ## Performance Specifications
 

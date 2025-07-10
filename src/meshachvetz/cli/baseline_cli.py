@@ -98,17 +98,26 @@ def generate_baseline_command(args) -> None:
         logger.info(f"🚀 Generating baseline with {args.num_runs} runs...")
         statistics = baseline_generator.generate_baseline(school_data)
         
-        # Save reports if output directory specified
+        # Save reports - let OutputManager handle if no directory specified
         if args.output_dir:
+            # User specified directory
             output_dir = Path(args.output_dir)
             output_dir.mkdir(parents=True, exist_ok=True)
             
             csv_file, summary_file = baseline_generator.save_baseline_report(
-                str(output_dir), 
-                args.output_prefix
+                output_dir=str(output_dir), 
+                input_file=args.csv_file,
+                prefix=args.output_prefix
             )
             
             logger.info(f"📊 Reports saved to {output_dir}")
+        else:
+            # Let OutputManager create descriptive directory
+            csv_file, summary_file = baseline_generator.save_baseline_report(
+                input_file=args.csv_file
+            )
+            
+            logger.info(f"📊 Reports saved to descriptive directory")
         
         # Display summary
         if not args.quiet:

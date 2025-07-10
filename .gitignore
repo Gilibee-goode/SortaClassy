@@ -86,6 +86,7 @@ run_meshachvetz.sh
 # Results and reports
 results_*/
 demo_reports/
+outputs/
 real_data/
 *.csv
 !examples/test_data/*.csv

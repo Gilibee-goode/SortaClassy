@@ -11,6 +11,7 @@ from typing import Dict, List, Any, Optional, Union, Tuple
 from datetime import datetime
 import csv
 from enum import Enum
+from pathlib import Path
 
 from .base_optimizer import BaseOptimizer, OptimizationResult
 from .random_swap import RandomSwapOptimizer
@@ -20,6 +21,7 @@ from .genetic import GeneticOptimizer
 from .or_tools_optimizer import ORToolsOptimizer
 from ..data.models import SchoolData, Student, ClassData
 from ..scorer.main_scorer import Scorer
+from ..utils.output_manager import OutputManager
 
 
 class AssignmentStatus(Enum):
@@ -59,6 +61,9 @@ class OptimizationManager:
         # Available algorithms
         self.algorithms = {}
         self._register_algorithms()
+        
+        # Initialize output manager
+        self.output_manager = OutputManager()
         
         # Default optimization parameters
         self.default_max_iterations = self.config.get('max_iterations', 1000)
@@ -792,7 +797,8 @@ class OptimizationManager:
         return best_result
     
     def optimize_and_save(self, school_data: SchoolData,
-                         output_file: str,
+                         output_file: str = None,
+                         input_file: str = None,
                          algorithm: str = None,
                          max_iterations: int = None,
                          initialization_strategy: str = "constraint_aware",
@@ -800,11 +806,12 @@ class OptimizationManager:
                          generate_reports: bool = True,
                          target_classes: Optional[int] = None) -> Tuple[OptimizationResult, Any]:
         """
-        Optimize assignments and save results to CSV file.
+        Optimize assignments and save results to CSV file using OutputManager.
         
         Args:
             school_data: Initial school data to optimize
-            output_file: Path to save optimized assignment CSV
+            output_file: Path to save optimized assignment CSV (optional, uses OutputManager if None)
+            input_file: Path to input CSV file (used for descriptive directory naming)
             algorithm: Optimization algorithm to use
             max_iterations: Maximum optimization iterations
             initialization_strategy: Strategy for initializing unassigned students
@@ -815,6 +822,27 @@ class OptimizationManager:
         Returns:
             Tuple of (OptimizationResult, detailed_scoring_result)
         """
+        # Use defaults if not specified
+        algorithm = algorithm or self.default_algorithm
+        
+        # Create output directory using OutputManager if not specified
+        if output_file is None:
+            if input_file:
+                output_dir = self.output_manager.create_optimization_directory(input_file, algorithm)
+            else:
+                output_dir = self.output_manager.create_operation_directory("optimize", algorithm=algorithm)
+            
+            # Create output filename
+            if input_file:
+                input_name = Path(input_file).stem
+                output_file = str(output_dir / f"optimized_{input_name}.csv")
+            else:
+                output_file = str(output_dir / "optimized_assignment.csv")
+        else:
+            # Use provided output file path
+            output_dir = Path(output_file).parent
+            output_dir.mkdir(parents=True, exist_ok=True)
+        
         # Run optimization
         result = self.optimize(school_data, algorithm, max_iterations, None, 
                              initialization_strategy, auto_initialize, target_classes)
@@ -828,39 +856,83 @@ class OptimizationManager:
         
         # Generate reports if requested
         if generate_reports:
-            output_dir = os.path.dirname(output_file) or "."
-            base_name = os.path.splitext(os.path.basename(output_file))[0]
-            
-            # Generate optimization report
-            report_file = os.path.join(output_dir, f"{base_name}_optimization_report.csv")
-            self._save_optimization_report(result, report_file)
-            
-            # Generate scoring reports using the scorer
-            reports_dir = os.path.join(output_dir, f"{base_name}_reports")
-            self.scorer.generate_csv_reports(scoring_result, reports_dir)
-            
-            self.logger.info(f"Reports generated in: {reports_dir}")
+            if input_file and output_file:
+                # Using OutputManager-created directory
+                output_dir_path = Path(output_file).parent
+                
+                # Save operation information
+                operation_info = {
+                    "Operation": "Optimize Assignment",
+                    "Input File": input_file or "Unknown",
+                    "Algorithm": result.algorithm_name,
+                    "Initial Score": f"{result.initial_score:.2f}/100",
+                    "Final Score": f"{result.final_score:.2f}/100",
+                    "Improvement": f"{result.improvement:.2f} ({result.improvement_percentage:.1f}%)",
+                    "Execution Time": f"{result.execution_time:.2f} seconds",
+                    "Iterations": f"{result.iterations_completed}/{result.total_iterations}",
+                    "Constraints Satisfied": "Yes" if result.constraints_satisfied else "No"
+                }
+                self.output_manager.save_operation_info(output_dir_path, operation_info)
+                
+                # Generate optimization report in same directory
+                report_file = str(output_dir_path / "optimization_report.csv")
+                self._save_optimization_report(result, report_file)
+                
+                # Generate scoring reports using the scorer with input file info
+                self.scorer.generate_csv_reports(scoring_result, str(output_dir_path / "scoring_reports"), input_file)
+                
+                self.logger.info(f"All reports generated in: {output_dir_path}")
+            else:
+                # Legacy mode for backward compatibility
+                output_dir_legacy = os.path.dirname(output_file) or "."
+                base_name = os.path.splitext(os.path.basename(output_file))[0]
+                
+                # Generate optimization report
+                report_file = os.path.join(output_dir_legacy, f"{base_name}_optimization_report.csv")
+                self._save_optimization_report(result, report_file)
+                
+                # Generate scoring reports using the scorer
+                reports_dir = os.path.join(output_dir_legacy, f"{base_name}_reports")
+                self.scorer.generate_csv_reports(scoring_result, reports_dir, input_file)
+                
+                self.logger.info(f"Reports generated in: {reports_dir}")
         
         self.logger.info(f"Optimized assignment saved to: {output_file}")
         
         return result, scoring_result
     
     def generate_initial_assignment(self, school_data: SchoolData,
-                                   output_file: str,
+                                   output_file: str = None,
+                                   input_file: str = None,
                                    strategy: str = "constraint_aware",
                                    target_classes: Optional[int] = None) -> SchoolData:
         """
-        Generate an initial assignment without optimization.
+        Generate an initial assignment without optimization using OutputManager.
         
         Args:
             school_data: School data with unassigned students
-            output_file: Path to save initial assignment CSV
+            output_file: Path to save initial assignment CSV (optional, uses OutputManager if None)
+            input_file: Path to input CSV file (used for descriptive directory naming)
             strategy: Initialization strategy to use
             target_classes: Number of target classes (auto-calculated if None)
             
         Returns:
             SchoolData with initial assignments
         """
+        # Create output directory using OutputManager if not specified
+        if output_file is None:
+            if input_file:
+                output_dir = self.output_manager.create_generation_directory(input_file, strategy)
+                input_name = Path(input_file).stem
+                output_file = str(output_dir / f"assignment_{input_name}.csv")
+            else:
+                output_dir = self.output_manager.create_operation_directory("generate", algorithm=strategy)
+                output_file = str(output_dir / "initial_assignment.csv")
+        else:
+            # Use provided output file path
+            output_dir = Path(output_file).parent
+            output_dir.mkdir(parents=True, exist_ok=True)
+        
         # Initialize assignments
         initialized_data = self.initialize_assignments(
             school_data, 
@@ -870,6 +942,19 @@ class OptimizationManager:
         
         # Save assignment to CSV
         self._save_assignment_csv(initialized_data, output_file)
+        
+        # Save operation information if using OutputManager
+        if input_file:
+            operation_info = {
+                "Operation": "Generate Initial Assignment",
+                "Input File": input_file,
+                "Strategy": strategy,
+                "Total Students": initialized_data.total_students,
+                "Total Classes": initialized_data.total_classes,
+                "Target Classes": target_classes or "Auto-calculated"
+            }
+            output_dir_path = Path(output_file).parent
+            self.output_manager.save_operation_info(output_dir_path, operation_info)
         
         # Log summary
         summary = self.get_assignment_summary(initialized_data)

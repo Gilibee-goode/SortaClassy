@@ -177,7 +177,7 @@ def handle_score_command(args):
     print(f"📁 Loading and scoring: {args.csv_file}")
     
     if args.reports:
-        # Score with reports
+        # Score with reports - the scorer already uses OutputManager for descriptive directories
         result, output_path = scorer.score_csv_file_with_reports(args.csv_file, args.output)
         print(f"📊 CSV reports generated in: {output_path}")
     else:
