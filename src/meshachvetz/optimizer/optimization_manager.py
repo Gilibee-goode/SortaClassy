@@ -881,6 +881,16 @@ class OptimizationManager:
                 # Generate scoring reports using the scorer with input file info
                 self.scorer.generate_csv_reports(scoring_result, str(output_dir_path / "scoring_reports"), input_file)
                 
+                # Generate full optimized CSV with statistics
+                if input_file:
+                    input_stem = Path(input_file).stem
+                    full_optimized_file = str(output_dir_path / f"full_optimized_{input_stem}.csv")
+                else:
+                    full_optimized_file = str(output_dir_path / "full_optimized_assignment.csv")
+                
+                self._save_full_optimized_csv(result.optimized_school_data, scoring_result, 
+                                            full_optimized_file, input_file)
+                
                 self.logger.info(f"All reports generated in: {output_dir_path}")
             else:
                 # Legacy mode for backward compatibility
@@ -894,6 +904,16 @@ class OptimizationManager:
                 # Generate scoring reports using the scorer
                 reports_dir = os.path.join(output_dir_legacy, f"{base_name}_reports")
                 self.scorer.generate_csv_reports(scoring_result, reports_dir, input_file)
+                
+                # Generate full optimized CSV with statistics (legacy mode)
+                if input_file:
+                    input_stem = Path(input_file).stem
+                    full_optimized_file = os.path.join(output_dir_legacy, f"full_optimized_{input_stem}.csv")
+                else:
+                    full_optimized_file = os.path.join(output_dir_legacy, f"full_optimized_{base_name}.csv")
+                
+                self._save_full_optimized_csv(result.optimized_school_data, scoring_result, 
+                                            full_optimized_file, input_file)
                 
                 self.logger.info(f"Reports generated in: {reports_dir}")
         
@@ -1035,17 +1055,18 @@ class OptimizationManager:
                 for student in sorted_students:
                     row = []
                     for column in columns:
-                        value = self._get_student_column_value(student, column)
+                        value = self._get_student_column_value(student, column, school_data)
                         row.append(value)
                     writer.writerow(row)
     
-    def _get_student_column_value(self, student: Student, column: str) -> str:
+    def _get_student_column_value(self, student: Student, column: str, school_data: SchoolData = None) -> str:
         """
         Get the value for a specific column from a student object.
         
         Args:
             student: Student object
             column: Column name
+            school_data: SchoolData object (needed for accessing original dataframe)
             
         Returns:
             String value for the column
@@ -1093,14 +1114,22 @@ class OptimizationManager:
             return student.force_friend or ''
         else:
             # Handle unknown columns by looking in original dataframe if available
-            # This preserves any extra columns that were in the original CSV
-            if (hasattr(student, '_original_data') and 
-                student._original_data is not None and 
-                column in student._original_data):
-                return str(student._original_data[column])
-            else:
-                # Default to empty string for unknown columns
-                return ''
+            if (school_data and 
+                hasattr(school_data, '_original_dataframe') and 
+                school_data._original_dataframe is not None and 
+                column in school_data._original_dataframe.columns):
+                # Find the row for this student in the original dataframe
+                original_df = school_data._original_dataframe
+                # Convert student_id to string for consistent comparison
+                student_row = original_df[original_df['student_id'].astype(str) == str(student.student_id)]
+                if not student_row.empty:
+                    value = student_row.iloc[0][column]
+                    # Handle NaN values and convert to string
+                    if value is not None and str(value) != 'nan':
+                        return str(value)
+            
+            # Default to empty string for unknown columns or if data not found
+            return ''
     
     def _save_optimization_report(self, result: OptimizationResult, output_file: str) -> None:
         """
@@ -1149,3 +1178,80 @@ class OptimizationManager:
             writer.writerow(['Iteration', 'Score', 'Improvement'])
             for i, (score, improvement) in enumerate(zip(result.score_history, result.improvement_history)):
                 writer.writerow([i, f"{score:.2f}", f"{improvement:.2f}"]) 
+    
+    def _save_full_optimized_csv(self, school_data: SchoolData, scoring_result: Any, 
+                                output_file: str, input_file: str = None) -> None:
+        """
+        Generate a comprehensive CSV that merges the optimized assignment with student statistics.
+        
+        This creates a "full_optimized_CSVFILE.csv" that combines:
+        - All original CSV columns (preserved structure)
+        - Current class assignments 
+        - Student satisfaction scores and statistics
+        
+        Args:
+            school_data: Optimized school data
+            scoring_result: Scoring result from the scorer
+            output_file: Path for the full optimized CSV file
+            input_file: Original input file path (for naming)
+        """
+        import pandas as pd
+        import tempfile
+        import os
+        
+        # First, create the standard optimized CSV in a temporary location
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as tmp_file:
+            temp_optimized_path = tmp_file.name
+        
+        try:
+            # Generate the optimized CSV with preserved column structure
+            self._save_assignment_csv(school_data, temp_optimized_path)
+            
+            # Read it back as a DataFrame for merging
+            optimized_df = pd.read_csv(temp_optimized_path)
+            
+            # Ensure student_id is treated as string for consistent merging
+            optimized_df['student_id'] = optimized_df['student_id'].astype(str)
+            
+            # Create student statistics DataFrame from scoring result
+            stats_data = []
+            for student_id, student_result in scoring_result.student_scores.items():
+                friend_sat = student_result['friend_satisfaction']
+                conflict_av = student_result['conflict_avoidance']
+                
+                stats_row = {
+                    'student_id': str(student_id),  # Ensure string type for consistency
+                    'student_overall_score': round(student_result['score'], 2),
+                    'friend_satisfaction_score': round(friend_sat['score'], 2),
+                    'conflict_avoidance_score': round(conflict_av['score'], 2),
+                    'friends_requested': friend_sat['friends_requested'],
+                    'friends_placed': friend_sat['friends_placed'],
+                    'missing_friends': '|'.join(friend_sat['missing_friends']) if friend_sat['missing_friends'] else '',
+                    'dislikes_total': conflict_av['dislikes_total'],
+                    'conflicts_present': '|'.join(conflict_av['conflicts_present']) if conflict_av['conflicts_present'] else ''
+                }
+                stats_data.append(stats_row)
+            
+            # Create statistics DataFrame
+            stats_df = pd.DataFrame(stats_data)
+            
+            # Merge the optimized CSV with statistics on student_id
+            # Use left join to preserve all students from optimized CSV
+            full_df = optimized_df.merge(stats_df, on='student_id', how='left')
+            
+            # Sort by class and then by student ID for consistent ordering
+            if 'class' in full_df.columns:
+                full_df = full_df.sort_values(['class', 'student_id'])
+            else:
+                full_df = full_df.sort_values(['student_id'])
+            
+            # Save the merged result
+            os.makedirs(os.path.dirname(output_file), exist_ok=True)
+            full_df.to_csv(output_file, index=False)
+            
+            self.logger.info(f"Full optimized CSV with statistics saved to: {output_file}")
+            
+        finally:
+            # Clean up temporary file
+            if os.path.exists(temp_optimized_path):
+                os.unlink(temp_optimized_path) 

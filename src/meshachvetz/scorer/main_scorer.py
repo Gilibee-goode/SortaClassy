@@ -422,6 +422,9 @@ class Scorer:
         self._generate_class_report(result, output_dir)
         self._generate_school_report(result, output_dir)
         
+        # Generate comprehensive balance report (combines class and school reports)
+        self._generate_comprehensive_balance_report(result, output_dir)
+        
         # Generate configuration report
         self._generate_config_report(output_dir)
         
@@ -681,6 +684,103 @@ class Scorer:
             writer.writerow(["Assistance Count Factor", self.config.normalization.assistance_count_factor])
             writer.writerow(["School Origin Factor", self.config.normalization.school_origin_factor])
 
+    def _generate_comprehensive_balance_report(self, result: ScoringResult, output_dir: str) -> None:
+        """
+        Generate a comprehensive balance report combining class details and school balance.
+        
+        This creates a single CSV that includes:
+        1. Class-by-class details (gender balance, demographics)
+        2. Spacer row for visual separation
+        3. School-level balance metrics (academic, behavior, size, etc.)
+        4. Class-specific values for school metrics
+        
+        Args:
+            result: ScoringResult object
+            output_dir: Directory to save the report
+        """
+        comprehensive_file = os.path.join(output_dir, "comprehensive_balance_report.csv")
+        
+        with open(comprehensive_file, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            
+            # SECTION 1: CLASS DETAILS
+            writer.writerow(["CLASS BALANCE DETAILS"])
+            writer.writerow(["Class ID", "Overall Score", "Gender Balance Score", "Male Count", "Female Count",
+                           "Male Percentage", "Female Percentage", "Balance Difference"])
+            
+            # Class data
+            for class_id, class_result in result.class_scores.items():
+                gender_balance = class_result['gender_balance']
+                total_students = gender_balance['male_count'] + gender_balance['female_count']
+                
+                male_percentage = (gender_balance['male_count'] / total_students * 100) if total_students > 0 else 0
+                female_percentage = (gender_balance['female_count'] / total_students * 100) if total_students > 0 else 0
+                
+                writer.writerow([
+                    class_id,
+                    f"{class_result['score']:.2f}",
+                    f"{gender_balance['score']:.2f}",
+                    gender_balance['male_count'],
+                    gender_balance['female_count'],
+                    f"{male_percentage:.1f}%",
+                    f"{female_percentage:.1f}%",
+                    f"{gender_balance['balance_difference']:.3f}"
+                ])
+            
+            # SPACER ROW for visual separation
+            writer.writerow([])
+            
+            # SECTION 2: SCHOOL BALANCE METRICS
+            writer.writerow(["SCHOOL BALANCE METRICS"])
+            writer.writerow(["Balance Metric", "Score", "Standard Deviation", "Mean", "Min Value", "Max Value", "Range"])
+            
+            school_scores = result.school_scores
+            
+            # Balance metrics
+            metrics = [
+                ("Academic Balance", school_scores['academic_balance']),
+                ("Behavior Balance", school_scores['behavior_balance']),
+                ("Studentiality Balance", school_scores['studentiality_balance']),
+                ("Size Balance", school_scores['size_balance']),
+                ("Assistance Balance", school_scores['assistance_balance']),
+                ("School Origin Balance", school_scores['school_origin_balance'])
+            ]
+            
+            for name, metric_data in metrics:
+                writer.writerow([
+                    name,
+                    f"{metric_data['score']:.2f}",
+                    f"{metric_data['std_dev']:.3f}",
+                    f"{metric_data['mean']:.2f}",
+                    f"{metric_data['min_value']:.2f}",
+                    f"{metric_data['max_value']:.2f}",
+                    f"{metric_data['range']:.2f}"
+                ])
+            
+            # SPACER ROW for visual separation
+            writer.writerow([])
+            
+            # SECTION 3: CLASS-SPECIFIC VALUES
+            writer.writerow(["CLASS-SPECIFIC VALUES"])
+            writer.writerow(["Class ID", "Academic Average", "Behavior Average", "Studentiality Average", 
+                           "Size", "Assistance Count", "School Diversity Score"])
+            
+            for class_id in school_scores['academic_balance']['class_values'].keys():
+                # Get school diversity score for this class
+                school_diversity_score = 0.0
+                if result.school_data and class_id in result.school_data.classes:
+                    school_diversity_score = result.school_data.classes[class_id].school_diversity_score
+                
+                writer.writerow([
+                    class_id,
+                    f"{school_scores['academic_balance']['class_values'][class_id]:.2f}",
+                    f"{school_scores['behavior_balance']['class_values'][class_id]:.2f}",
+                    f"{school_scores['studentiality_balance']['class_values'][class_id]:.2f}",
+                    school_scores['size_balance']['class_values'][class_id],
+                    school_scores['assistance_balance']['class_values'][class_id],
+                    f"{school_diversity_score:.2f}"
+                ])
+    
     def score_csv_file_with_reports(self, csv_file: str, output_dir: str = None) -> tuple[ScoringResult, str]:
         """
         Convenience method to score CSV file and generate reports in one call.

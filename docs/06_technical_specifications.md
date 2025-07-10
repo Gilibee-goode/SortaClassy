@@ -567,6 +567,7 @@ outputs/score_students_sample_2025-07-10_13-32-15/
 outputs/optimize_students_sample_local-search_2025-07-10_14-15-30/
 ├── operation_info.txt           # Operation metadata
 ├── optimized_students_sample.csv # Final optimized assignment
+├── full_optimized_students_sample.csv # Comprehensive CSV with statistics (NEW)
 ├── optimization_report.csv     # Optimization progress and metrics
 └── scoring_reports/            # Detailed scoring analysis
     ├── operation_info.txt
@@ -574,17 +575,48 @@ outputs/optimize_students_sample_local-search_2025-07-10_14-15-30/
     ├── student_details.csv
     ├── class_details.csv
     ├── school_balance.csv
+    ├── comprehensive_balance_report.csv # Combined class + school balance (NEW)
     └── configuration.csv
 ```
 
-#### Baseline Output
+#### New Full Optimized CSV Output
 
+**File:** `full_optimized_INPUTFILE.csv`
+
+This comprehensive CSV file combines the best of both worlds:
+- **All original CSV columns** (preserving any custom columns)
+- **Optimized class assignments** 
+- **Student satisfaction statistics** merged from the scoring system
+
+**Purpose:** Provides a single file for complete analysis without needing to manually merge separate files.
+
+**Structure:**
+- All columns from the original input CSV (with preserved order)
+- Class assignments from optimization
+- Additional statistics columns merged on `student_id`
+
+**Added Statistics Columns:**
+- `student_overall_score`: Individual student satisfaction score (0-100)
+- `friend_satisfaction_score`: How well student's friend preferences were satisfied (0-100)  
+- `conflict_avoidance_score`: How well student's conflict avoidances were achieved (0-100)
+- `friends_requested`: Total number of preferred friends specified (0-3)
+- `friends_placed`: Number of preferred friends placed in same class
+- `missing_friends`: Pipe-separated list of preferred friends in different classes
+- `dislikes_total`: Total number of disliked peers specified (0-5)
+- `conflicts_present`: Pipe-separated list of disliked peers in same class
+
+**Example Structure:**
+```csv
+student_id,first_name,last_name,gender,class,academic_score,behavior_rank,studentiality_rank,assistance_package,custom_column,school,preferred_friend_1,...,student_overall_score,friend_satisfaction_score,conflict_avoidance_score,friends_requested,friends_placed,missing_friends,dislikes_total,conflicts_present
+203765489,Sarah,Johnson,F,1,92.0,A,A,false,custom_value,School A,317328593,...,100.0,100.0,95.0,1,1,,2,
 ```
-outputs/baseline_test_data_random-swap_20runs_2025-07-10_15-45-12/
-├── operation_info.txt          # Operation metadata
-├── baseline_data.csv           # Statistical data from all runs
-└── baseline_summary.txt        # Comprehensive analysis report
-```
+
+**Benefits:**
+1. **Single File Analysis:** All data needed for comprehensive analysis in one place
+2. **Preserved Structure:** Original CSV column order and custom columns maintained
+3. **Rich Statistics:** Student-level satisfaction metrics for detailed insights
+4. **Easy Import:** Can be directly imported into analysis tools or spreadsheets
+5. **No Manual Merging:** Eliminates need to manually join optimized assignments with scoring reports
 
 ### Dynamic CSV Column Preservation
 
@@ -637,6 +669,7 @@ student_id,first_name,last_name,gender,class,academic_score,behavior_rank,studen
 6. **Automatic Cleanup:** Old runs are automatically removed to save disk space
 7. **Backward Compatibility:** Explicit output paths still work for legacy scripts
 8. **Column Preservation:** Input CSV column structure is exactly preserved in output files
+9. **Comprehensive Analysis:** Full optimized CSV provides all data in one file for easy analysis
 
 ## Performance Specifications
 
@@ -740,3 +773,62 @@ mypy >= 0.950
 4. **Standalone Executable**: Platform-specific binaries
 
 This technical specification provides the detailed foundation for implementing the Meshachvetz system according to the design documents. 
+
+#### New Comprehensive Balance Report
+
+**File:** `comprehensive_balance_report.csv` (in scoring_reports directory)
+
+This consolidated report combines class-level and school-level balance information into a single, easy-to-inspect file. It eliminates the need to open multiple CSV files for complete balance analysis.
+
+**Structure:**
+
+1. **CLASS BALANCE DETAILS Section**
+   - Class-by-class gender balance and demographics
+   - Same content as `class_details.csv`
+   - Columns: Class ID, Overall Score, Gender Balance Score, Male Count, Female Count, Male Percentage, Female Percentage, Balance Difference
+
+2. **Spacer Row** 
+   - Empty row for visual separation
+
+3. **SCHOOL BALANCE METRICS Section**
+   - Inter-class balance metrics with statistical analysis
+   - Core metrics from `school_balance.csv`
+   - Columns: Balance Metric, Score, Standard Deviation, Mean, Min Value, Max Value, Range
+   - Includes: Academic Balance, Behavior Balance, Studentiality Balance, Size Balance, Assistance Balance, School Origin Balance
+
+4. **Spacer Row**
+   - Empty row for visual separation
+
+5. **CLASS-SPECIFIC VALUES Section**
+   - Detailed breakdown of school metrics by individual class
+   - Columns: Class ID, Academic Average, Behavior Average, Studentiality Average, Size, Assistance Count, School Diversity Score
+
+**Example Structure:**
+```csv
+CLASS BALANCE DETAILS
+Class ID,Overall Score,Gender Balance Score,Male Count,Female Count,Male Percentage,Female Percentage,Balance Difference
+1,66.67,66.67,2,1,66.7%,33.3%,0.333
+2,66.67,66.67,1,2,33.3%,66.7%,0.333
+3,100.00,100.00,1,1,50.0%,50.0%,0.000
+
+SCHOOL BALANCE METRICS
+Balance Metric,Score,Standard Deviation,Mean,Min Value,Max Value,Range
+Academic Balance,98.33,0.833,85.64,84.87,86.80,1.93
+Behavior Balance,91.75,0.236,1.83,1.50,2.00,0.50
+...
+
+CLASS-SPECIFIC VALUES
+Class ID,Academic Average,Behavior Average,Studentiality Average,Size,Assistance Count,School Diversity Score
+1,85.27,2.00,1.33,3,1,100.00
+2,84.87,2.00,2.00,3,0,100.00
+3,86.80,1.50,2.00,2,1,100.00
+```
+
+**Benefits:**
+1. **Single File Analysis:** All balance information in one convenient location
+2. **Visual Organization:** Clear sections with spacer rows for easy reading
+3. **Complete Context:** Both class-level and school-level perspectives combined
+4. **Reduced File Management:** No need to open multiple CSV files for balance analysis
+5. **Consistent Format:** Maintains exact data from individual reports
+6. **Quick Inspection:** Ideal for rapid assessment of assignment quality
+7. **Excel/Spreadsheet Friendly:** Opens cleanly in any spreadsheet application 
