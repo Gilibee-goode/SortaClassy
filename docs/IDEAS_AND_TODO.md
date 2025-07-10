@@ -97,31 +97,6 @@ This document tracks feature ideas, enhancements, and TODO items for the Meshach
 
 ---
 
-## 🎯 **Scoring System Enhancements**
-
-### **Dynamic Weighting**
-- **Priority: Medium**
-- **Idea**: Allow different weights for different students
-- **Details**: VIP students, special needs students might have different weight priorities
-
-### **Additional Scoring Factors**
-- **Priority: Low**
-- **Idea**: Add more sophisticated scoring factors
-- **Details**:
-  - Geographic proximity (if address data available)
-  - Learning style compatibility
-  - Personality type matching
-  - Previous year performance correlation
-
-### **Constraint Soft/Hard Classification**
-- **Priority: High**
-- **Idea**: Allow marking constraints as "soft" (preferences) vs "hard" (requirements)
-- **Details**: 
-  - Hard constraints must be satisfied
-  - Soft constraints contribute to score but can be violated
-  - Configurable per constraint type
-
----
 
 ## 🔄 **Data Management**
 

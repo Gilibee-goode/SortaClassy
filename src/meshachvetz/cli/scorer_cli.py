@@ -78,6 +78,7 @@ Examples:
     score_parser.add_argument('--detailed', '-d', action='store_true', help='Show detailed statistics from each scoring layer')
     score_parser.add_argument('--verbose', '-v', action='store_true', help='Enable verbose logging')
     score_parser.add_argument('--quiet', '-q', action='store_true', help='Suppress non-essential output')
+    score_parser.add_argument('--skip-validation', action='store_true', help='Skip data validation (use with caution)')
     
     # Configuration override options
     score_parser.add_argument('--student-weight', type=float, help='Student layer weight (0.0-1.0)')
@@ -90,6 +91,7 @@ Examples:
     validate_parser = subparsers.add_parser('validate', help='Validate a student data CSV file')
     validate_parser.add_argument('csv_file', type=validate_file_exists, help='Path to CSV file to validate')
     validate_parser.add_argument('--verbose', '-v', action='store_true', help='Enable verbose logging')
+    validate_parser.add_argument('--skip-validation', action='store_true', help='Skip validation and just check file structure (contradictory but allows testing)')
     
     # Show config command
     config_parser = subparsers.add_parser('show-config', help='Show current configuration')
@@ -160,8 +162,16 @@ def handle_score_command(args):
         print(f"⚙️  Applying weight overrides: {weight_overrides}")
         config.update_weights(**weight_overrides)
     
-    # Create scorer
-    scorer = Scorer(config)
+    # Create scorer with validation setting
+    # Override validation if skip-validation is specified
+    if hasattr(args, 'skip_validation') and args.skip_validation:
+        print("⚠️  Data validation is DISABLED - use with caution!")
+        # We need to modify the scorer's data loader to skip validation
+        scorer = Scorer(config)
+        scorer.data_loader.validate_data = False
+        scorer.data_loader.validator = None
+    else:
+        scorer = Scorer(config)
     
     # Score the file
     print(f"📁 Loading and scoring: {args.csv_file}")
@@ -198,8 +208,17 @@ def handle_validate_command(args):
     print("🔍 Meshachvetz Data Validator")
     print("=" * 40)
     
+    # Handle skip validation flag (somewhat contradictory but useful for testing)
+    if hasattr(args, 'skip_validation') and args.skip_validation:
+        print("⚠️  Data validation is DISABLED - only checking file structure!")
+    
     # Create scorer to use its data loader
     scorer = Scorer()
+    
+    # Override validation if skip-validation is specified
+    if hasattr(args, 'skip_validation') and args.skip_validation:
+        scorer.data_loader.validate_data = False
+        scorer.data_loader.validator = None
     
     print(f"📁 Validating: {args.csv_file}")
     

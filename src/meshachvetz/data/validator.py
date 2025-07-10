@@ -28,10 +28,16 @@ class DataValidator:
     - Cross-reference validation
     """
     
-    # Required columns according to data format specification
+    # Required columns according to data format specification  
+    # Note: 'class' column is now handled gracefully if missing
     REQUIRED_COLUMNS = [
-        'student_id', 'first_name', 'last_name', 'gender', 'class',
+        'student_id', 'first_name', 'last_name', 'gender',
         'academic_score', 'behavior_rank', 'studentiality_rank', 'assistance_package'
+    ]
+    
+    # Conditionally required columns that can be auto-created if missing
+    CONDITIONALLY_REQUIRED_COLUMNS = [
+        'class'  # Will be auto-created with empty values if missing
     ]
     
     # Optional social preference columns
@@ -44,7 +50,7 @@ class DataValidator:
     ]
     
     # All expected columns
-    ALL_COLUMNS = REQUIRED_COLUMNS + OPTIONAL_COLUMNS
+    ALL_COLUMNS = REQUIRED_COLUMNS + CONDITIONALLY_REQUIRED_COLUMNS + OPTIONAL_COLUMNS
     
     # Valid behavior ranks
     VALID_BEHAVIOR_RANKS = {'A', 'B', 'C', 'D'}
@@ -123,10 +129,20 @@ class DataValidator:
         if missing_columns:
             self.errors.append(f"Missing required columns: {missing_columns}")
             
+        # Check for conditionally required columns and warn if missing
+        missing_conditional_columns = []
+        for col in self.CONDITIONALLY_REQUIRED_COLUMNS:
+            if col not in df.columns:
+                missing_conditional_columns.append(col)
+                
+        if missing_conditional_columns:
+            self.warnings.append(f"Missing columns that will be auto-created: {missing_conditional_columns}")
+            
         # Check for unexpected columns
         unexpected_columns = []
+        all_expected_columns = self.REQUIRED_COLUMNS + self.CONDITIONALLY_REQUIRED_COLUMNS + self.OPTIONAL_COLUMNS
         for col in df.columns:
-            if col not in self.ALL_COLUMNS:
+            if col not in all_expected_columns:
                 unexpected_columns.append(col)
                 
         if unexpected_columns:

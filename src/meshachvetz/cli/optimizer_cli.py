@@ -106,6 +106,7 @@ Examples:
     optimize_parser.add_argument('--log-level', choices=['minimal', 'normal', 'detailed', 'debug'], 
                                 default='normal', help='Set logging level for optimization progress')
     optimize_parser.add_argument('--quiet', '-q', action='store_true', help='Suppress output')
+    optimize_parser.add_argument('--skip-validation', action='store_true', help='Skip data validation for problematic CSV files')
     
     # List algorithms command
     list_parser = subparsers.add_parser('list-algorithms', help='List available optimization algorithms')
@@ -128,6 +129,7 @@ Examples:
     generate_parser.add_argument('--log-level', choices=['minimal', 'normal', 'detailed', 'debug'], 
                                 default='normal', help='Set logging level for generation progress')
     generate_parser.add_argument('--quiet', '-q', action='store_true', help='Suppress output')
+    generate_parser.add_argument('--skip-validation', action='store_true', help='Skip data validation for problematic CSV files')
     
     # Compare algorithms subcommand
     compare_parser = subparsers.add_parser(
@@ -153,6 +155,7 @@ Examples:
     compare_parser.add_argument('--log-level', choices=['minimal', 'normal', 'detailed', 'debug'], 
                                 default='normal', help='Set logging level for comparison progress')
     compare_parser.add_argument('--quiet', '-q', action='store_true', help='Suppress output')
+    compare_parser.add_argument('--skip-validation', action='store_true', help='Skip data validation for problematic CSV files')
 
     # Parse arguments
     args = parser.parse_args()
@@ -211,8 +214,13 @@ def handle_optimize_command(args):
     else:
         print("📋 Using default configuration")
     
-    # Create scorer
+    # Create scorer with validation setting
+    # Override validation if skip-validation is specified
     scorer = Scorer(config)
+    if hasattr(args, 'skip_validation') and args.skip_validation:
+        print("⚠️  Data validation is DISABLED - use with caution!")
+        scorer.data_loader.validate_data = False
+        scorer.data_loader.validator = None
     
     # Create optimization manager with algorithm-specific config including log level
     optimizer_config = {
@@ -388,8 +396,13 @@ def handle_generate_assignment_command(args):
     else:
         print("📋 Using default configuration")
     
-    # Create scorer
+    # Create scorer with validation setting
+    # Override validation if skip-validation is specified
     scorer = Scorer(config)
+    if hasattr(args, 'skip_validation') and args.skip_validation:
+        print("⚠️  Data validation is DISABLED - use with caution!")
+        scorer.data_loader.validate_data = False
+        scorer.data_loader.validator = None
     
     # Create optimization manager
     optimization_manager = OptimizationManager(scorer, {})
@@ -476,7 +489,13 @@ def handle_compare_command(args):
         from meshachvetz.scorer.main_scorer import Scorer
         from meshachvetz.optimizer.optimization_manager import OptimizationManager
         
-        loader = DataLoader(validate_data=True)
+        # Handle skip validation flag
+        validate_data = True
+        if hasattr(args, 'skip_validation') and args.skip_validation:
+            print("⚠️  Data validation is DISABLED - use with caution!")
+            validate_data = False
+            
+        loader = DataLoader(validate_data=validate_data)
         school_data = loader.load_csv(args.input_file)
         
         print(f"✅ Loaded {school_data.total_students} students")

@@ -91,12 +91,14 @@ For more help on a specific command:
     score_parser.add_argument('--log-level', choices=['minimal', 'normal', 'detailed', 'debug'], 
                              default='normal', help='Set logging level for scoring progress')
     score_parser.add_argument('--quiet', '-q', action='store_true', help='Suppress non-essential output')
+    score_parser.add_argument('--skip-validation', action='store_true', help='Skip data validation (use with caution)')
     
     # Optimize command (now handles both single and multiple algorithms)
     optimize_parser = subparsers.add_parser('optimize', help='Optimize student class assignments')
     optimize_parser.add_argument('csv_file', help='Path to CSV file containing student data')
     optimize_parser.add_argument('--output', '-o', type=str, help='Output file for optimized assignment')
     optimize_parser.add_argument('--output-dir', type=str, help='Output directory for all generated files')
+    optimize_parser.add_argument('--skip-validation', action='store_true', help='Skip data validation (use with caution)')
     
     # Multiple algorithms option
     optimize_parser.add_argument('--algorithms', nargs='+', 
@@ -157,6 +159,7 @@ For more help on a specific command:
     baseline_parser.add_argument('--log-level', choices=['minimal', 'normal', 'detailed', 'debug'],
                                 default='normal', help='Logging level (default: normal)')
     baseline_parser.add_argument('--quiet', '-q', action='store_true', help='Suppress summary output')
+    baseline_parser.add_argument('--skip-validation', action='store_true', help='Skip data validation (use with caution)')
     baseline_parser.add_argument('--min-friends', type=int, default=0,
                                 help='Minimum friends required per student (default: 0)')
     baseline_parser.add_argument('--early-stop', type=int, default=100,
@@ -171,6 +174,7 @@ For more help on a specific command:
     validate_parser = subparsers.add_parser('validate', help='Validate a student data CSV file')
     validate_parser.add_argument('csv_file', help='Path to CSV file to validate')
     validate_parser.add_argument('--verbose', '-v', action='store_true', help='Enable verbose logging')
+    validate_parser.add_argument('--skip-validation', action='store_true', help='Skip validation and just check file structure (contradictory but allows testing)')
     
     # Config command group
     config_parser = subparsers.add_parser('config', help='Configuration management')
@@ -204,6 +208,7 @@ For more help on a specific command:
     generate_parser.add_argument('--config', '-c', type=str, help='Path to YAML configuration file')
     generate_parser.add_argument('--verbose', '-v', action='store_true', help='Enable verbose logging')
     generate_parser.add_argument('--quiet', '-q', action='store_true', help='Suppress non-essential output')
+    generate_parser.add_argument('--skip-validation', action='store_true', help='Skip data validation (use with caution)')
     
     # Parse arguments
     args = parser.parse_args()

@@ -104,6 +104,60 @@ The input CSV file must contain the following columns:
 - Empty string "" means no constraint
 - Creates optimization constraint groups
 
+## Validation and Data Handling
+
+### Column Requirements
+
+#### Strictly Required Columns
+These columns must be present and cannot be empty:
+- `student_id`, `first_name`, `last_name`, `gender`
+- `academic_score`, `behavior_rank`, `studentiality_rank`, `assistance_package`
+
+#### Conditionally Required Columns
+These columns are auto-created if missing:
+- `class` - Auto-created with empty values if missing from CSV
+
+#### Optional Columns
+These columns can be missing or empty:
+- `school`, `preferred_friend_1-3`, `disliked_peer_1-5`
+- `force_class`, `force_friend`
+
+### Validation Levels
+
+#### Full Validation (Default)
+- Strict data type and format checking
+- Range validation for numeric fields
+- Format validation for IDs and ranks
+- Cross-reference validation
+
+#### Skip Validation Mode (`--skip-validation` flag)
+- File format and basic structure checking only
+- Data normalization for invalid values
+- No strict format enforcement
+- Useful for problematic or legacy data
+
+### Missing Class Column Handling
+When the `class` column is missing from a CSV file:
+1. System automatically detects the missing column
+2. Creates the column with empty string values for all students
+3. Displays warning message about auto-creation
+4. Continues processing with students marked as unassigned
+5. Students are ready for assignment generation or optimization
+
+### Data Normalization (Skip Validation Mode)
+When validation is skipped, invalid data is automatically normalized:
+
+| Field | Invalid Input | Normalized To | Notes |
+|-------|--------------|---------------|-------|
+| `student_id` | Not 9 digits | Synthetic 9-digit ID | Based on MD5 hash of original |
+| `first_name` | Empty/missing | "Unknown" | Default placeholder |
+| `last_name` | Empty/missing | "Student" | Default placeholder |
+| `gender` | Not M/F | "M" | Default to male |
+| `academic_score` | Invalid/out of range | 50.0 | Middle score |
+| `behavior_rank` | Not A-D | "A" | Best behavior |
+| `studentiality_rank` | Not A-D | "A" | Best studentiality |
+| `force_friend` | Invalid IDs | Filtered | Only valid 9-digit IDs retained |
+
 ## Sample Input File
 
 ```csv

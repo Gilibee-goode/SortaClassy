@@ -58,7 +58,14 @@ def generate_baseline_command(args) -> None:
         
         # Load and validate data
         logger.info(f"📁 Loading data from {args.csv_file}")
-        loader = DataLoader()
+        
+        # Handle skip validation flag
+        validate_data = True
+        if hasattr(args, 'skip_validation') and args.skip_validation:
+            logger.info("⚠️  Data validation is DISABLED - use with caution!")
+            validate_data = False
+            
+        loader = DataLoader(validate_data=validate_data)
         school_data = loader.load_csv(args.csv_file)
         
         logger.info(f"✅ Loaded {len(school_data.students)} students, {len(school_data.classes)} classes")

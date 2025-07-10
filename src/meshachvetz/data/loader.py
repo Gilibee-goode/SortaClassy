@@ -6,6 +6,7 @@ data models with comprehensive error handling and validation.
 from typing import List, Dict, Any, Optional, Tuple
 import pandas as pd
 import numpy as np
+import re
 from pathlib import Path
 from .models import Student, ClassData, SchoolData
 from .validator import DataValidator, DataValidationError
@@ -58,6 +59,9 @@ class DataLoader:
             # Load CSV file
             df = self._load_csv_file(file_path)
             
+            # Handle missing class column by auto-creating it
+            df = self._handle_missing_columns(df)
+            
             # Apply missing data imputation
             df = self._apply_missing_data_imputation(df)
             
@@ -89,6 +93,26 @@ class DataLoader:
             raise DataLoadError(f"Error parsing CSV file: {e}")
         except Exception as e:
             raise DataLoadError(f"Unexpected error loading data: {e}")
+    
+    def _handle_missing_columns(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Handle missing conditionally required columns by auto-creating them.
+        
+        Args:
+            df: DataFrame potentially missing some columns
+            
+        Returns:
+            DataFrame with missing columns added
+        """
+        # Create a copy to avoid modifying the original
+        df_handled = df.copy()
+        
+        # Handle missing 'class' column
+        if 'class' not in df_handled.columns:
+            print("⚠️  Missing 'class' column - creating with empty values (will need assignment generation)")
+            df_handled['class'] = ''  # Empty string indicates unassigned
+            
+        return df_handled
     
     def _apply_missing_data_imputation(self, df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -368,33 +392,132 @@ class DataLoader:
             force_friend = self._get_string_value(row, 'force_friend', default='')
             
             # Create Student object
-            student = Student(
-                student_id=student_id,
-                first_name=first_name,
-                last_name=last_name,
-                gender=gender,
-                class_id=class_id,
-                academic_score=academic_score,
-                behavior_rank=behavior_rank,
-                studentiality_rank=studentiality_rank,
-                assistance_package=assistance_package,
-                school=school,
-                preferred_friend_1=preferred_friend_1,
-                preferred_friend_2=preferred_friend_2,
-                preferred_friend_3=preferred_friend_3,
-                disliked_peer_1=disliked_peer_1,
-                disliked_peer_2=disliked_peer_2,
-                disliked_peer_3=disliked_peer_3,
-                disliked_peer_4=disliked_peer_4,
-                disliked_peer_5=disliked_peer_5,
-                force_class=force_class,
-                force_friend=force_friend
-            )
+            if self.validate_data:
+                # Normal creation with validation
+                student = Student(
+                    student_id=student_id,
+                    first_name=first_name,
+                    last_name=last_name,
+                    gender=gender,
+                    class_id=class_id,
+                    academic_score=academic_score,
+                    behavior_rank=behavior_rank,
+                    studentiality_rank=studentiality_rank,
+                    assistance_package=assistance_package,
+                    school=school,
+                    preferred_friend_1=preferred_friend_1,
+                    preferred_friend_2=preferred_friend_2,
+                    preferred_friend_3=preferred_friend_3,
+                    disliked_peer_1=disliked_peer_1,
+                    disliked_peer_2=disliked_peer_2,
+                    disliked_peer_3=disliked_peer_3,
+                    disliked_peer_4=disliked_peer_4,
+                    disliked_peer_5=disliked_peer_5,
+                    force_class=force_class,
+                    force_friend=force_friend
+                )
+            else:
+                # Skip validation by creating with safe defaults and then setting values
+                student = self._create_student_without_validation(
+                    student_id, first_name, last_name, gender, class_id,
+                    academic_score, behavior_rank, studentiality_rank, assistance_package,
+                    school, preferred_friend_1, preferred_friend_2, preferred_friend_3,
+                    disliked_peer_1, disliked_peer_2, disliked_peer_3, disliked_peer_4, disliked_peer_5,
+                    force_class, force_friend
+                )
             
             return student
             
         except Exception as e:
             raise DataLoadError(f"Error processing row {row_num}: {e}")
+    
+    def _create_student_without_validation(self, student_id: str, first_name: str, last_name: str, 
+                                         gender: str, class_id: str, academic_score: float, 
+                                         behavior_rank: str, studentiality_rank: str, 
+                                         assistance_package: bool, school: str,
+                                         preferred_friend_1: str, preferred_friend_2: str, preferred_friend_3: str,
+                                         disliked_peer_1: str, disliked_peer_2: str, disliked_peer_3: str,
+                                         disliked_peer_4: str, disliked_peer_5: str,
+                                         force_class: str, force_friend: str) -> Student:
+        """
+        Create a Student object without validation by normalizing data first.
+        
+        This method creates safe default values for invalid data to prevent
+        validation errors when validation is disabled.
+        """
+        # Normalize student_id (make it 9 digits if invalid)
+        if not student_id or not re.match(r'^\d{9}$', student_id):
+            # Create a synthetic 9-digit ID based on original
+            import hashlib
+            hash_obj = hashlib.md5(str(student_id).encode())
+            # Convert hex to numeric and ensure it's 9 digits
+            numeric_hash = str(int(hash_obj.hexdigest()[:8], 16))[:8]  # Convert hex to int, then to string, max 8 digits
+            student_id = '1' + numeric_hash.zfill(8)  # 1 + 8 digits = 9 digits total
+        
+        # Normalize names
+        if not first_name or not first_name.strip():
+            first_name = "Unknown"
+        if not last_name or not last_name.strip():
+            last_name = "Student"
+        
+        # Truncate names if too long
+        first_name = first_name[:50] if len(first_name) > 50 else first_name
+        last_name = last_name[:50] if len(last_name) > 50 else last_name
+        
+        # Normalize gender
+        if gender.upper() not in ['M', 'F']:
+            gender = 'M'  # Default to male if invalid
+        else:
+            gender = gender.upper()
+        
+        # Normalize academic score
+        if not isinstance(academic_score, (int, float)) or not (0.0 <= academic_score <= 100.0):
+            academic_score = 50.0  # Default to middle score
+        
+        # Normalize behavior rank
+        if behavior_rank.upper() not in ['A', 'B', 'C', 'D']:
+            behavior_rank = 'A'  # Default to best behavior
+        else:
+            behavior_rank = behavior_rank.upper()
+        
+        # Normalize studentiality rank
+        if studentiality_rank.upper() not in ['A', 'B', 'C', 'D']:
+            studentiality_rank = 'A'  # Default to best studentiality
+        else:
+            studentiality_rank = studentiality_rank.upper()
+        
+        # Normalize force_friend (validate IDs if present)
+        if force_friend:
+            friend_ids = [id.strip() for id in force_friend.split(',') if id.strip()]
+            valid_friends = []
+            for friend_id in friend_ids:
+                if re.match(r'^\d{9}$', friend_id):
+                    valid_friends.append(friend_id)
+            force_friend = ','.join(valid_friends)
+        
+        # Now create the Student object with normalized data
+        return Student(
+            student_id=student_id,
+            first_name=first_name,
+            last_name=last_name,
+            gender=gender,
+            class_id=class_id,
+            academic_score=academic_score,
+            behavior_rank=behavior_rank,
+            studentiality_rank=studentiality_rank,
+            assistance_package=assistance_package,
+            school=school,
+            preferred_friend_1=preferred_friend_1,
+            preferred_friend_2=preferred_friend_2,
+            preferred_friend_3=preferred_friend_3,
+            disliked_peer_1=disliked_peer_1,
+            disliked_peer_2=disliked_peer_2,
+            disliked_peer_3=disliked_peer_3,
+            disliked_peer_4=disliked_peer_4,
+            disliked_peer_5=disliked_peer_5,
+            force_class=force_class,
+            force_friend=force_friend
+        )
             
     def _get_string_value(self, row: pd.Series, column: str, default: str = '') -> str:
         """
