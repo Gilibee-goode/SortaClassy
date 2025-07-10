@@ -258,12 +258,14 @@ class Scorer:
         studentiality_std = school_scores['studentiality_balance']['std_dev']
         size_std = school_scores['size_balance']['std_dev']
         assistance_std = school_scores['assistance_balance']['std_dev']
+        school_origin_std = school_scores['school_origin_balance']['std_dev']
         
         lines.append(f"   Academic Balance: {school_scores['academic_balance']['score']:.1f}/100 (σ={academic_std:.2f})")
         lines.append(f"   Behavior Balance: {school_scores['behavior_balance']['score']:.1f}/100 (σ={behavior_std:.2f})")
         lines.append(f"   Studentiality Balance: {school_scores['studentiality_balance']['score']:.1f}/100 (σ={studentiality_std:.2f})")
         lines.append(f"   Size Balance: {school_scores['size_balance']['score']:.1f}/100 (σ={size_std:.2f})")
         lines.append(f"   Assistance Balance: {school_scores['assistance_balance']['score']:.1f}/100 (σ={assistance_std:.2f})")
+        lines.append(f"   School Origin Balance: {school_scores['school_origin_balance']['score']:.1f}/100 (σ={school_origin_std:.2f})")
         
         # Show class size ranges if there's significant variation
         if size_std > 1.0:  # Only show if there's meaningful variation
@@ -330,6 +332,8 @@ class Scorer:
                      f"(σ={school_scores['size_balance']['std_dev']:.2f})")
         report.append(f"Assistance Balance: {school_scores['assistance_balance']['score']:.1f}/100 "
                      f"(σ={school_scores['assistance_balance']['std_dev']:.2f})")
+        report.append(f"School Origin Balance: {school_scores['school_origin_balance']['score']:.1f}/100 "
+                     f"(σ={school_scores['school_origin_balance']['std_dev']:.2f})")
         
         return "\n".join(report)
     
@@ -568,7 +572,8 @@ class Scorer:
                 ("Behavior Balance", school_scores['behavior_balance']),
                 ("Studentiality Balance", school_scores['studentiality_balance']),
                 ("Size Balance", school_scores['size_balance']),
-                ("Assistance Balance", school_scores['assistance_balance'])
+                ("Assistance Balance", school_scores['assistance_balance']),
+                ("School Origin Balance", school_scores['school_origin_balance'])
             ]
             
             for name, metric_data in metrics:
@@ -585,16 +590,22 @@ class Scorer:
             # Add class-specific values
             writer.writerow([])
             writer.writerow(["Class-Specific Values"])
-            writer.writerow(["Class ID", "Academic Average", "Behavior Average", "Studentiality Average", "Size", "Assistance Count"])
+            writer.writerow(["Class ID", "Academic Average", "Behavior Average", "Studentiality Average", "Size", "Assistance Count", "School Diversity Score"])
             
             for class_id in school_scores['academic_balance']['class_values'].keys():
+                # Get school diversity score for this class
+                school_diversity_score = 0.0
+                if result.school_data and class_id in result.school_data.classes:
+                    school_diversity_score = result.school_data.classes[class_id].school_diversity_score
+                
                 writer.writerow([
                     class_id,
                     f"{school_scores['academic_balance']['class_values'][class_id]:.2f}",
                     f"{school_scores['behavior_balance']['class_values'][class_id]:.2f}",
                     f"{school_scores['studentiality_balance']['class_values'][class_id]:.2f}",
                     school_scores['size_balance']['class_values'][class_id],
-                    school_scores['assistance_balance']['class_values'][class_id]
+                    school_scores['assistance_balance']['class_values'][class_id],
+                    f"{school_diversity_score:.2f}"
                 ])
     
     def _generate_config_report(self, output_dir: str) -> None:
@@ -632,6 +643,7 @@ class Scorer:
             writer.writerow(["Studentiality Balance", self.config.weights.studentiality_balance])
             writer.writerow(["Size Balance", self.config.weights.size_balance])
             writer.writerow(["Assistance Balance", self.config.weights.assistance_balance])
+            writer.writerow(["School Origin Balance", self.config.weights.school_origin_balance])
             writer.writerow([])
             
             # Normalization factors
@@ -642,6 +654,7 @@ class Scorer:
             writer.writerow(["Studentiality Rank Factor", self.config.normalization.studentiality_rank_factor])
             writer.writerow(["Class Size Factor", self.config.normalization.class_size_factor])
             writer.writerow(["Assistance Count Factor", self.config.normalization.assistance_count_factor])
+            writer.writerow(["School Origin Factor", self.config.normalization.school_origin_factor])
 
     def score_csv_file_with_reports(self, csv_file: str, output_dir: str = None) -> tuple[ScoringResult, str]:
         """

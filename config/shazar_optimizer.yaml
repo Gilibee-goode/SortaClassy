@@ -17,7 +17,8 @@ weights:
     studentiality_balance: 0.05    # Weight for studentiality rank distribution across classes
     size_balance: 0.80             # Weight for class size balance
     assistance_balance: 0.5      # Weight for assistance package distribution
-    
+    school_origin_balance: 0.2    # ✨ NEW: Weight for school origin distribution balance
+
   layers:
     student: 0.80   # Primary focus: Individual student satisfaction
     class: 0.1     # Minimal focus: Gender balance within classes
@@ -60,6 +61,7 @@ normalization:
   studentiality_rank_factor: 35.0
   class_size_factor: 7.0
   assistance_count_factor: 10.0
+  school_origin_factor: 20.0     # ✨ Normalization factor for school origin balance
 
 # Validation rules
 validation:

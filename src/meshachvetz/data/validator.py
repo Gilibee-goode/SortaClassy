@@ -36,6 +36,7 @@ class DataValidator:
     
     # Optional social preference columns
     OPTIONAL_COLUMNS = [
+        'school',  # School of origin for distribution balance
         'preferred_friend_1', 'preferred_friend_2', 'preferred_friend_3',
         'disliked_peer_1', 'disliked_peer_2', 'disliked_peer_3',
         'disliked_peer_4', 'disliked_peer_5',
@@ -464,7 +465,9 @@ class DataValidator:
                 class_id=student_data.get('class', ''),
                 academic_score=float(student_data.get('academic_score', 0.0)),
                 behavior_rank=student_data.get('behavior_rank', 'A'),
+                studentiality_rank=student_data.get('studentiality_rank', 'A'),
                 assistance_package=self._parse_boolean(student_data.get('assistance_package', False)),
+                school=student_data.get('school', ''),
                 preferred_friend_1=student_data.get('preferred_friend_1', ''),
                 preferred_friend_2=student_data.get('preferred_friend_2', ''),
                 preferred_friend_3=student_data.get('preferred_friend_3', ''),

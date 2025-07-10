@@ -24,6 +24,7 @@ Welcome to the Meshachvetz project documentation! This collection of documents p
 ### **📊 Features and Updates**
 - [08_enhanced_iteration_logging.md](08_enhanced_iteration_logging.md) - Enhanced iteration logging system with configurable levels
 - [09_baseline_generator.md](09_baseline_generator.md) - Comprehensive baseline generator for performance benchmarking
+- [SCHOOL_ORIGIN_BALANCE_GUIDE.md](SCHOOL_ORIGIN_BALANCE_GUIDE.md) - ✨ **NEW**: School origin balance feature for fair distribution across origin schools
 - [IDEAS_AND_TODO.md](IDEAS_AND_TODO.md) - Future development ideas and TODO list to track enhancements
 
 ## 🚀 Quick Start Guide

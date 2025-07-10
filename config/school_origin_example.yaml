@@ -1,0 +1,74 @@
+# Example Configuration with School Origin Balance Enabled
+# This configuration enables the new school origin balance feature
+
+weights:
+  student_layer:
+    friends: 0.7        # Weight for placing students with their preferred friends
+    dislikes: 0.3       # Weight for separating students from disliked peers
+    
+  class_layer:
+    gender_balance: 1.0  # Weight for maintaining gender balance within classes
+    
+  school_layer:
+    academic_balance: 0.05        # Weight for academic score distribution across classes
+    behavior_balance: 0.3         # Weight for behavior rank distribution across classes
+    studentiality_balance: 0.3    # Weight for studentiality rank distribution across classes  
+    size_balance: 0.0             # Weight for class size balance
+    assistance_balance: 0.15      # Weight for assistance package distribution
+    school_origin_balance: 0.2    # ✨ NEW: Weight for school origin distribution balance
+    
+  layers:
+    student: 0.7    # Focus on individual student satisfaction
+    class: 0.1      # Gender balance within classes
+    school: 0.2     # School-wide balance metrics (including school origin)
+
+class_config:
+  target_classes: 5
+  min_class_size: 15
+  max_class_size: 30
+  preferred_class_size: 25
+  allow_uneven_classes: true
+
+normalization:
+  academic_score_factor: 2.0
+  behavior_rank_factor: 35.0
+  studentiality_rank_factor: 35.0
+  class_size_factor: 5.0
+  assistance_count_factor: 10.0
+  school_origin_factor: 20.0     # ✨ Normalization factor for school origin balance
+
+validation:
+  student_id_length: 9
+  max_name_length: 50
+  min_academic_score: 0.0
+  max_academic_score: 100.0
+  valid_behavior_ranks: ['A', 'B', 'C', 'D']
+  valid_boolean_values: ['true', 'false', '1', '0', 'yes', 'no', 'True', 'False', 'TRUE', 'FALSE', 'YES', 'NO']
+
+# School Origin Balance Feature Details:
+# =====================================
+# 
+# This feature addresses fairness in class distribution by ensuring students
+# from different origin schools are distributed appropriately across classes.
+#
+# Adaptive Distribution Rules:
+# - Large schools (>40 students): Target 80% class presence
+# - Medium schools (20-40 students): Target 60% class presence  
+# - Small schools (<20 students): Target 40% class presence
+# - Anti-dominance rule: No single school should dominate any class (max 60%)
+#
+# Scoring Algorithm:
+# - 70% representation score (how well schools meet their presence targets)
+# - 30% non-dominance score (how well classes avoid single-school domination)
+#
+# Benefits:
+# - Prevents classes with only 2 schools while others have diverse representation
+# - Balances fairness with friend group preservation for small schools
+# - Uses mathematically rigorous Shannon diversity index
+# - Configurable weights (set to 0.0 to disable)
+#
+# Usage:
+# 1. Add 'school' column to your student CSV
+# 2. Set school_origin_balance weight > 0.0 
+# 3. Run optimizer with this configuration
+# 4. Check reports for school origin distribution metrics 

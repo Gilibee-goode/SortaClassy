@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import List, Dict, Optional, Set
 from collections import Counter
 import re
+import math
 
 
 @dataclass
@@ -24,6 +25,7 @@ class Student:
     behavior_rank: str  # A-D format
     studentiality_rank: str  # A-D format
     assistance_package: bool
+    school: str = ""  # School of origin for distribution balance
     preferred_friend_1: str = ""
     preferred_friend_2: str = ""
     preferred_friend_3: str = ""
@@ -43,6 +45,7 @@ class Student:
         self.validate_academic_score()
         self.validate_behavior_rank()
         self.validate_studentiality_rank()
+        self.validate_school()
         self.validate_force_constraints()
         
     def validate_student_id(self) -> None:
@@ -90,6 +93,15 @@ class Student:
             raise ValueError(f"Studentiality rank must be A-D, got: {self.studentiality_rank}")
         # Normalize to uppercase
         self.studentiality_rank = self.studentiality_rank.upper()
+        
+    def validate_school(self) -> None:
+        """Validate school of origin."""
+        if self.school is None:
+            self.school = ""
+        # School can be empty (for backwards compatibility) or any non-empty string
+        # We'll normalize it to handle case variations
+        if self.school:
+            self.school = self.school.strip()
         
     def validate_force_constraints(self) -> None:
         """Validate force constraint formats."""
@@ -218,6 +230,74 @@ class ClassData:
             if student.has_force_friend():
                 groups.add(student.force_friend)
         return len(groups)
+        
+    @property
+    def school_distribution(self) -> Dict[str, int]:
+        """Get distribution of students by school of origin."""
+        return Counter(s.school for s in self.students if s.school)
+        
+    @property
+    def unique_schools(self) -> Set[str]:
+        """Get set of unique schools represented in this class."""
+        return {s.school for s in self.students if s.school}
+        
+    @property
+    def school_diversity_score(self) -> float:
+        """
+        Calculate school diversity score using Shannon's diversity index.
+        Returns 0-100 where 100 is maximum diversity.
+        """
+        if not self.students:
+            return 100.0  # Empty class is perfectly diverse
+            
+        # Get school distribution
+        school_counts = self.school_distribution
+        if not school_counts:
+            return 100.0  # No school data means perfect diversity
+            
+        total = sum(school_counts.values())
+        if total == 0:
+            return 100.0
+            
+        # Calculate Shannon diversity index
+        shannon_index = 0.0
+        for count in school_counts.values():
+            if count > 0:
+                proportion = count / total
+                shannon_index -= proportion * math.log(proportion)
+        
+        # Normalize to 0-100 scale
+        # Maximum diversity occurs when all schools are equally represented
+        max_possible_diversity = math.log(len(school_counts))
+        if max_possible_diversity == 0:
+            return 100.0
+            
+        diversity_ratio = shannon_index / max_possible_diversity
+        return min(100.0, diversity_ratio * 100.0)
+        
+    def get_school_dominance_score(self) -> float:
+        """
+        Calculate how dominated this class is by a single school.
+        Returns 0-100 where 0 means one school dominates completely, 100 means perfect balance.
+        """
+        if not self.students:
+            return 100.0
+            
+        school_counts = self.school_distribution
+        if not school_counts:
+            return 100.0
+            
+        total = sum(school_counts.values())
+        if total == 0:
+            return 100.0
+            
+        # Find the largest school representation
+        max_count = max(school_counts.values())
+        dominance_ratio = max_count / total
+        
+        # Convert to balance score: 0% dominance = 100 points, 100% dominance = 0 points
+        balance_score = (1 - dominance_ratio) * 100
+        return balance_score
         
     def get_student_by_id(self, student_id: str) -> Optional[Student]:
         """Get student by ID from this class."""
@@ -445,4 +525,46 @@ class SchoolData:
             if student_id not in assigned_student_ids:
                 unassigned.append(student)
         
-        return unassigned 
+        return unassigned
+        
+    @property
+    def school_distribution(self) -> Dict[str, int]:
+        """Get overall distribution of students by school of origin."""
+        return Counter(s.school for s in self.students.values() if s.school)
+        
+    @property
+    def unique_schools(self) -> Set[str]:
+        """Get set of all unique schools in the dataset."""
+        return {s.school for s in self.students.values() if s.school}
+        
+    def get_school_size_category(self, school: str) -> str:
+        """
+        Categorize school by size for adaptive distribution rules.
+        
+        Args:
+            school: School name
+            
+        Returns:
+            'large', 'medium', or 'small'
+        """
+        school_dist = self.school_distribution
+        school_size = school_dist.get(school, 0)
+        
+        if school_size > 40:
+            return 'large'
+        elif school_size >= 20:
+            return 'medium'
+        else:
+            return 'small'
+            
+    def get_school_distribution_by_class(self) -> Dict[str, Dict[str, int]]:
+        """
+        Get school distribution for each class.
+        
+        Returns:
+            Dict mapping class_id -> dict of school -> count
+        """
+        result = {}
+        for class_id, class_data in self.classes.items():
+            result[class_id] = class_data.school_distribution
+        return result 

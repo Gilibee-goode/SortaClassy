@@ -349,6 +349,9 @@ class DataLoader:
             studentiality_rank = self._get_string_value(row, 'studentiality_rank', default='A').upper()
             assistance_package = self._get_boolean_value(row, 'assistance_package', default=False)
             
+            # Extract school of origin field
+            school = self._get_string_value(row, 'school', default='')
+            
             # Extract optional social preference fields
             preferred_friend_1 = self._get_string_value(row, 'preferred_friend_1', default='')
             preferred_friend_2 = self._get_string_value(row, 'preferred_friend_2', default='')
@@ -375,6 +378,7 @@ class DataLoader:
                 behavior_rank=behavior_rank,
                 studentiality_rank=studentiality_rank,
                 assistance_package=assistance_package,
+                school=school,
                 preferred_friend_1=preferred_friend_1,
                 preferred_friend_2=preferred_friend_2,
                 preferred_friend_3=preferred_friend_3,
@@ -560,6 +564,7 @@ class DataLoader:
                 'behavior_rank': student.behavior_rank,
                 'studentiality_rank': student.studentiality_rank,
                 'assistance_package': student.assistance_package,
+                'school': student.school,
                 'preferred_friend_1': student.preferred_friend_1,
                 'preferred_friend_2': student.preferred_friend_2,
                 'preferred_friend_3': student.preferred_friend_3,

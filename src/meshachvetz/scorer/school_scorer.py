@@ -301,6 +301,109 @@ class SchoolScorer:
         
         return balance_result
     
+    def calculate_school_origin_balance(self, school_data: SchoolData) -> Dict[str, float]:
+        """
+        Calculate school origin distribution balance across classes using adaptive rules.
+        
+        Uses different distribution targets based on school sizes:
+        - Large schools (>40 students): Should be present in at least 80% of classes
+        - Medium schools (20-40 students): Should be present in at least 60% of classes  
+        - Small schools (<20 students): Should be present in at least 40% of classes
+        - No single school should dominate any class (max 60% from one school)
+        
+        Args:
+            school_data: Complete school data
+            
+        Returns:
+            Dictionary with balance score and detailed statistics
+        """
+        if not school_data.classes or not school_data.unique_schools:
+            return {
+                'score': 100.0,
+                'std_dev': 0.0,
+                'mean': 0.0,
+                'min_value': 0.0,
+                'max_value': 0.0,
+                'range': 0.0,
+                'class_values': {},
+                'school_distribution': {},
+                'representation_scores': {},
+                'dominance_scores': {},
+                'adaptive_targets': {}
+            }
+        
+        # Get overall school distribution and calculate adaptive targets
+        overall_schools = school_data.school_distribution
+        total_classes = len(school_data.classes)
+        adaptive_targets = {}
+        
+        for school, count in overall_schools.items():
+            size_category = school_data.get_school_size_category(school)
+            if size_category == 'large':
+                target_presence = 0.8  # 80% of classes
+            elif size_category == 'medium':
+                target_presence = 0.6  # 60% of classes
+            else:  # small
+                target_presence = 0.4  # 40% of classes
+            adaptive_targets[school] = target_presence
+        
+        # Calculate representation scores for each school
+        representation_scores = {}
+        for school in overall_schools.keys():
+            classes_with_school = 0
+            for class_data in school_data.classes.values():
+                if school in class_data.school_distribution:
+                    classes_with_school += 1
+            
+            actual_presence = classes_with_school / total_classes if total_classes > 0 else 0
+            target_presence = adaptive_targets[school]
+            
+            # Score based on how close actual is to target
+            # Perfect match = 100, complete miss = 0
+            if target_presence > 0:
+                representation_score = min(100.0, (actual_presence / target_presence) * 100.0)
+            else:
+                representation_score = 100.0
+            
+            representation_scores[school] = representation_score
+        
+        # Calculate dominance scores for each class (no single school >60%)
+        dominance_scores = {}
+        class_values = {}
+        
+        for class_id, class_data in school_data.classes.items():
+            dominance_score = class_data.get_school_dominance_score()
+            dominance_scores[class_id] = dominance_score
+            class_values[class_id] = dominance_score
+        
+        # Overall representation score (average of all school representation scores)
+        avg_representation = sum(representation_scores.values()) / len(representation_scores) if representation_scores else 100.0
+        
+        # Overall dominance score (average of class dominance scores)
+        avg_dominance = sum(dominance_scores.values()) / len(dominance_scores) if dominance_scores else 100.0
+        
+        # Combined score: 70% representation + 30% non-dominance
+        combined_score = (avg_representation * 0.7) + (avg_dominance * 0.3)
+        
+        # Calculate balance statistics using the combined scores
+        balance_values = list(class_values.values())
+        balance_result = self.calculate_balance_score(
+            balance_values,
+            self.config.normalization.school_origin_factor
+        )
+        
+        # Override the balance score with our adaptive score
+        balance_result['score'] = combined_score
+        balance_result['class_values'] = class_values
+        balance_result['school_distribution'] = overall_schools
+        balance_result['representation_scores'] = representation_scores
+        balance_result['dominance_scores'] = dominance_scores
+        balance_result['adaptive_targets'] = adaptive_targets
+        balance_result['avg_representation'] = avg_representation
+        balance_result['avg_dominance'] = avg_dominance
+        
+        return balance_result
+    
     def calculate_school_score(self, school_data: SchoolData) -> Dict[str, float]:
         """
         Calculate overall school balance score.
@@ -326,6 +429,7 @@ class SchoolScorer:
         studentiality_result = self.calculate_studentiality_balance(school_data)
         size_result = self.calculate_size_balance(school_data)
         assistance_result = self.calculate_assistance_balance(school_data)
+        school_origin_result = self.calculate_school_origin_balance(school_data)
         
         # Get weights from configuration
         w_academic = self.config.weights.academic_balance
@@ -333,6 +437,7 @@ class SchoolScorer:
         w_studentiality = self.config.weights.studentiality_balance
         w_size = self.config.weights.size_balance
         w_assistance = self.config.weights.assistance_balance
+        w_school_origin = self.config.weights.school_origin_balance
         
         # Calculate weighted score
         academic_score = academic_result['score']
@@ -340,9 +445,10 @@ class SchoolScorer:
         studentiality_score = studentiality_result['score']
         size_score = size_result['score']
         assistance_score = assistance_result['score']
+        school_origin_score = school_origin_result['score']
         
         # Weighted combination
-        total_weight = w_academic + w_behavior + w_studentiality + w_size + w_assistance
+        total_weight = w_academic + w_behavior + w_studentiality + w_size + w_assistance + w_school_origin
         if total_weight == 0:
             # Avoid division by zero
             overall_score = 0.0
@@ -352,7 +458,8 @@ class SchoolScorer:
                 behavior_score * w_behavior +
                 studentiality_score * w_studentiality +
                 size_score * w_size +
-                assistance_score * w_assistance
+                assistance_score * w_assistance +
+                school_origin_score * w_school_origin
             ) / total_weight
         
         return {
@@ -362,18 +469,21 @@ class SchoolScorer:
             'studentiality_balance': studentiality_result,
             'size_balance': size_result,
             'assistance_balance': assistance_result,
+            'school_origin_balance': school_origin_result,
             'weighted_score': {
                 'academic_component': academic_score * w_academic / total_weight if total_weight > 0 else 0,
                 'behavior_component': behavior_score * w_behavior / total_weight if total_weight > 0 else 0,
                 'studentiality_component': studentiality_score * w_studentiality / total_weight if total_weight > 0 else 0,
                 'size_component': size_score * w_size / total_weight if total_weight > 0 else 0,
                 'assistance_component': assistance_score * w_assistance / total_weight if total_weight > 0 else 0,
+                'school_origin_component': school_origin_score * w_school_origin / total_weight if total_weight > 0 else 0,
                 'weights_used': {
                     'academic_balance': w_academic,
                     'behavior_balance': w_behavior,
                     'studentiality_balance': w_studentiality,
                     'size_balance': w_size,
-                    'assistance_balance': w_assistance
+                    'assistance_balance': w_assistance,
+                    'school_origin_balance': w_school_origin
                 }
             }
         }
@@ -421,6 +531,7 @@ class SchoolScorer:
             'studentiality_balance_score': school_score['studentiality_balance']['score'],
             'size_balance_score': school_score['size_balance']['score'],
             'assistance_balance_score': school_score['assistance_balance']['score'],
+            'school_origin_balance_score': school_score['school_origin_balance']['score'],
             'school_average_academic': avg_academic,
             'school_average_behavior': avg_behavior,
             'school_average_studentiality': avg_studentiality,
@@ -431,5 +542,6 @@ class SchoolScorer:
             'academic_range': school_score['academic_balance']['range'],
             'behavior_range': school_score['behavior_balance']['range'],
             'studentiality_range': school_score['studentiality_balance']['range'],
-            'assistance_range': school_score['assistance_balance']['range']
+            'assistance_range': school_score['assistance_balance']['range'],
+            'school_origin_range': school_score['school_origin_balance']['range']
         } 

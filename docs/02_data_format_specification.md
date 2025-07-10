@@ -16,6 +16,7 @@ The input CSV file must contain the following columns:
 | `behavior_rank` | String | Behavior ranking (A-D, where A=excellent) | "A", "B", "C", "D" |
 | `studentiality_rank` | String | Academic diligence ranking (A-D, where A=excellent) | "A", "B", "C", "D" |
 | `assistance_package` | Boolean | Whether student needs assistance | true, false |
+| `school` | String | School of origin for distribution balance (optional) | "School A", "Beit Sefer B", "" |
 | `preferred_friend_1` | String | First preferred friend ID (optional) | "203765489", "" |
 | `preferred_friend_2` | String | Second preferred friend ID (optional) | "213568467", "" |
 | `preferred_friend_3` | String | Third preferred friend ID (optional) | "456789123", "" |
@@ -73,6 +74,13 @@ The input CSV file must contain the following columns:
 - Case-insensitive
 - Null values will be treated as false
 
+#### School of Origin
+- Optional column for school distribution balance
+- Can contain any string identifier for the student's previous school
+- Empty string "" indicates no school data
+- Used for calculating school origin balance in the School Layer scoring
+- Enables adaptive distribution rules based on school sizes
+
 #### Social Preferences
 - **Preferred Friends**: Up to 3 optional columns (preferred_friend_1, preferred_friend_2, preferred_friend_3)
 - **Disliked Peers**: Up to 5 optional columns (disliked_peer_1 through disliked_peer_5)
@@ -99,13 +107,13 @@ The input CSV file must contain the following columns:
 ## Sample Input File
 
 ```csv
-student_id,first_name,last_name,gender,class,academic_score,behavior_rank,studentiality_rank,assistance_package,preferred_friend_1,preferred_friend_2,preferred_friend_3,disliked_peer_1,disliked_peer_2,disliked_peer_3,disliked_peer_4,disliked_peer_5,force_class,force_friend
-317328593,John,Smith,M,1,85.5,B,A,false,203765489,213568467,,456789123,891234567,,,,,
-203765489,Sarah,Johnson,F,1,92.0,A,A,false,317328593,456789123,,891234567,,,,203765489,213568467
-213568467,Ahmed,Ali,M,2,78.3,C,B,true,456789123,234567890,,317328593,891234567,,,203765489,213568467
-456789123,Maria,Garcia,F,2,88.7,B,B,false,203765489,213568467,,891234567,234567890,,,,
-891234567,David,Brown,M,3,91.2,A,C,false,317328593,234567890,,456789123,,,,3,
-234567890,Emma,Wilson,F,3,82.4,B,A,true,891234567,345678901,,317328593,456789123,,,,
+student_id,first_name,last_name,gender,class,academic_score,behavior_rank,studentiality_rank,assistance_package,school,preferred_friend_1,preferred_friend_2,preferred_friend_3,disliked_peer_1,disliked_peer_2,disliked_peer_3,disliked_peer_4,disliked_peer_5,force_class,force_friend
+317328593,John,Smith,M,1,85.5,B,A,false,School A,203765489,213568467,,456789123,891234567,,,,,
+203765489,Sarah,Johnson,F,1,92.0,A,A,false,School B,317328593,456789123,,891234567,,,,203765489,213568467
+213568467,Ahmed,Ali,M,2,78.3,C,B,true,School A,456789123,234567890,,317328593,891234567,,,203765489,213568467
+456789123,Maria,Garcia,F,2,88.7,B,B,false,School C,203765489,213568467,,891234567,234567890,,,,
+891234567,David,Brown,M,3,91.2,A,C,false,School B,317328593,234567890,,456789123,,,,3,
+234567890,Emma,Wilson,F,3,82.4,B,A,true,School A,891234567,345678901,,317328593,456789123,,,,
 ```
 
 ## Output CSV Formats
@@ -165,6 +173,7 @@ The school layer evaluates how balanced classes are when compared to each other.
 - **Studentiality Rank Balance**: Measures how similar average studentiality ranks are across classes
 - **Class Size Balance**: Measures how similar class sizes are across all classes
 - **Assistance Package Balance**: Measures how evenly assistance package students are distributed
+- **School Origin Balance**: Measures how well students from different origin schools are distributed across classes using adaptive rules based on school sizes
 
 ### Three-Layer System Summary
 - **Student Layer**: Individual student satisfaction (friend placement, conflict avoidance)
@@ -178,6 +187,11 @@ A perfect school layer score (100) is achieved when all classes have:
 - Identical average studentiality ranks
 - Identical number of students
 - Identical number of assistance package students
+- Optimal school origin distribution based on adaptive rules:
+  - Large schools (>40 students): Present in at least 80% of classes
+  - Medium schools (20-40 students): Present in at least 60% of classes
+  - Small schools (<20 students): Present in at least 40% of classes
+  - No single school dominates any class (max 60% from one school)
 
 ### Final Summary Score
 The summary score combines all three layers using weighted averaging to produce a single overall score reflecting the quality of the entire student placement system.
