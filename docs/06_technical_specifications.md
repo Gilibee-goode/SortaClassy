@@ -832,3 +832,37 @@ Class ID,Academic Average,Behavior Average,Studentiality Average,Size,Assistance
 5. **Consistent Format:** Maintains exact data from individual reports
 6. **Quick Inspection:** Ideal for rapid assessment of assignment quality
 7. **Excel/Spreadsheet Friendly:** Opens cleanly in any spreadsheet application 
+
+### Excel Compatibility and Hebrew Text Support
+
+**Problem Solved:** Hebrew text in CSV files appears garbled when opened in Microsoft Excel due to encoding issues.
+
+**Solution:** All CSV outputs use UTF-8 with BOM (Byte Order Mark) encoding that Excel recognizes for proper Hebrew text display.
+
+**Implementation:**
+- **New Utility:** `src/meshachvetz/utils/csv_utils.py` with Excel-compatible CSV writing functions
+- **ExcelCsvWriter:** Context manager for writing CSV files with UTF-8 BOM encoding
+- **Universal Application:** All CSV outputs throughout the system use Excel-compatible encoding
+
+**Files with Excel-Compatible Encoding:**
+- All scoring reports (`student_details.csv`, `class_details.csv`, etc.)
+- All optimization outputs (`optimized_*.csv`, `full_optimized_*.csv`)
+- All baseline and comparison reports
+- Configuration and summary reports
+
+**Technical Details:**
+```python
+# UTF-8 BOM encoding ensures Excel displays Hebrew correctly
+with ExcelCsvWriter('output.csv') as writer:
+    writer.writerow(['שם', 'כיתה', 'ציון'])  # Hebrew headers
+    writer.writerow(['יוסי', 'א1', '85'])     # Hebrew data
+```
+
+**Benefits:**
+1. **Perfect Hebrew Display:** Hebrew names and text display correctly in Excel
+2. **Universal Compatibility:** Works with all spreadsheet applications
+3. **Automatic Application:** No manual conversion needed
+4. **Transparent Operation:** System automatically applies correct encoding
+5. **Backward Compatibility:** Non-Hebrew text works exactly as before
+
+**Verification:** Hebrew characters (יוסי, שרה, אברהם, מרים) will display properly when CSV files are opened in Excel, rather than appearing as garbled text. 

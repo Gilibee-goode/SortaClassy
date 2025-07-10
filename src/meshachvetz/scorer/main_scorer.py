@@ -14,6 +14,7 @@ from ..data.models import SchoolData
 from ..data.loader import DataLoader
 from ..utils.config import Config
 from ..utils.output_manager import OutputManager
+from ..utils.csv_utils import ExcelCsvWriter
 from .student_scorer import StudentScorer
 from .class_scorer import ClassScorer
 from .school_scorer import SchoolScorer
@@ -437,8 +438,7 @@ class Scorer:
         
         satisfaction_summary = self.get_student_satisfaction_summary(result)
         
-        with open(summary_file, 'w', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f)
+        with ExcelCsvWriter(summary_file) as writer:
             
             # Header
             writer.writerow(["Meshachvetz Scoring Summary Report"])
@@ -497,8 +497,7 @@ class Scorer:
         """Generate detailed student-by-student report."""
         student_file = os.path.join(output_dir, "student_details.csv")
         
-        with open(student_file, 'w', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f)
+        with ExcelCsvWriter(student_file) as writer:
             
             # Header
             writer.writerow(["Student ID", "Overall Score", "Friend Satisfaction", "Conflict Avoidance",
@@ -556,8 +555,7 @@ class Scorer:
         """Generate detailed class-by-class report."""
         class_file = os.path.join(output_dir, "class_details.csv")
         
-        with open(class_file, 'w', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f)
+        with ExcelCsvWriter(class_file) as writer:
             
             # Header
             writer.writerow(["Class ID", "Overall Score", "Gender Balance Score", "Male Count", "Female Count",
@@ -588,8 +586,7 @@ class Scorer:
         
         school_scores = result.school_scores
         
-        with open(school_file, 'w', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f)
+        with ExcelCsvWriter(school_file) as writer:
             
             # Header
             writer.writerow(["Balance Metric", "Score", "Standard Deviation", "Mean", "Min Value", "Max Value", "Range"])
@@ -640,8 +637,7 @@ class Scorer:
         """Generate configuration report showing all weights and parameters used."""
         config_file = os.path.join(output_dir, "configuration.csv")
         
-        with open(config_file, 'w', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f)
+        with ExcelCsvWriter(config_file) as writer:
             
             # Header
             writer.writerow(["Configuration Used for Scoring"])
@@ -700,8 +696,7 @@ class Scorer:
         """
         comprehensive_file = os.path.join(output_dir, "comprehensive_balance_report.csv")
         
-        with open(comprehensive_file, 'w', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f)
+        with ExcelCsvWriter(comprehensive_file) as writer:
             
             # SECTION 1: CLASS DETAILS
             writer.writerow(["CLASS BALANCE DETAILS"])

@@ -22,6 +22,7 @@ from .or_tools_optimizer import ORToolsOptimizer
 from ..data.models import SchoolData, Student, ClassData
 from ..scorer.main_scorer import Scorer
 from ..utils.output_manager import OutputManager
+from ..utils.csv_utils import ExcelCsvWriter
 
 
 class AssignmentStatus(Enum):
@@ -734,8 +735,7 @@ class OptimizationManager:
         
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
         
-        with open(output_file, 'w', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f)
+        with ExcelCsvWriter(output_file) as writer:
             
             # Write header
             writer.writerow(['Algorithm Comparison Report'])
@@ -764,17 +764,15 @@ class OptimizationManager:
             # Write detailed results
             writer.writerow(['Detailed Results:'])
             writer.writerow(['Algorithm', 'Initial Score', 'Final Score', 'Improvement', 'Time', 'Iterations'])
-            for alg, result in comparison['results'].items():
+            for result in comparison['results']:
                 writer.writerow([
-                    alg,
+                    result.algorithm_name,
                     f"{result.initial_score:.2f}",
                     f"{result.final_score:.2f}",
                     f"{result.improvement:.2f}",
                     f"{result.execution_time:.2f}",
                     result.iterations_completed
                 ])
-        
-        self.logger.info(f"Algorithm comparison report saved to: {output_file}")
     
     def get_best_result(self, results: Dict[str, OptimizationResult]) -> OptimizationResult:
         """
@@ -1041,8 +1039,7 @@ class OptimizationManager:
                 'force_class', 'force_friend'
             ]
         
-        with open(output_file, 'w', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f)
+        with ExcelCsvWriter(output_file) as writer:
             
             # Write header using dynamic column structure
             writer.writerow(columns)
@@ -1141,8 +1138,7 @@ class OptimizationManager:
         """
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
         
-        with open(output_file, 'w', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f)
+        with ExcelCsvWriter(output_file) as writer:
             
             # Write optimization summary
             writer.writerow(['Optimization Report'])
@@ -1247,7 +1243,7 @@ class OptimizationManager:
             
             # Save the merged result
             os.makedirs(os.path.dirname(output_file), exist_ok=True)
-            full_df.to_csv(output_file, index=False)
+            full_df.to_csv(output_file, index=False, encoding='utf-8-sig')
             
             self.logger.info(f"Full optimized CSV with statistics saved to: {output_file}")
             

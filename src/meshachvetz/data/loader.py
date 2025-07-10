@@ -717,7 +717,7 @@ class DataLoader:
             
         # Create DataFrame and export
         df = pd.DataFrame(student_dicts)
-        df.to_csv(output_path, index=False)
+        df.to_csv(output_path, index=False, encoding='utf-8-sig')
         
     @staticmethod
     def validate_csv_file(file_path: str) -> Dict[str, Any]:

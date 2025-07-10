@@ -17,6 +17,8 @@ from .base_optimizer import OptimizationResult
 from ..data.models import SchoolData
 from ..utils.logging import LogLevel
 from ..utils.output_manager import OutputManager
+from ..utils.csv_utils import ExcelCsvWriter
+from .optimization_manager import OptimizationManager
 
 
 class BaselineRun:
@@ -331,8 +333,7 @@ class BaselineGenerator:
     
     def _save_csv_report(self, csv_file: Path) -> None:
         """Save detailed CSV report of all runs."""
-        with open(csv_file, 'w', newline='') as f:
-            writer = csv.writer(f)
+        with ExcelCsvWriter(str(csv_file)) as writer:
             
             # Header
             writer.writerow([
