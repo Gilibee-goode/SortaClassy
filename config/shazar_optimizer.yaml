@@ -5,23 +5,23 @@
 # Scoring weights (most important part)
 weights:
   student_layer:
-    friends: 0.9        # Weight for placing students with their preferred friends
-    dislikes: 0.1       # Weight for separating students from disliked peers
+    friends: 0.95        # Weight for placing students with their preferred friends
+    dislikes: 0.05       # Weight for separating students from disliked peers
     
   class_layer:
     gender_balance: 1.0  # Weight for maintaining gender balance within classes
     
   school_layer:
     academic_balance: 0.05        # Weight for academic score distribution across classes
-    behavior_balance: 0.2         # Weight for behavior rank distribution across classes
-    studentiality_balance: 0.2    # Weight for studentiality rank distribution across classes
-    size_balance: 0.5             # Weight for class size balance
-    assistance_balance: 0.10      # Weight for assistance package distribution
+    behavior_balance: 0.05         # Weight for behavior rank distribution across classes
+    studentiality_balance: 0.05    # Weight for studentiality rank distribution across classes
+    size_balance: 0.80             # Weight for class size balance
+    assistance_balance: 0.5      # Weight for assistance package distribution
     
   layers:
-    student: 0.65   # Primary focus: Individual student satisfaction
-    class: 0.15     # Minimal focus: Gender balance within classes
-    school: 0.20     # Secondary focus: School-wide balance metrics
+    student: 0.80   # Primary focus: Individual student satisfaction
+    class: 0.1     # Minimal focus: Gender balance within classes
+    school: 0.1     # Secondary focus: School-wide balance metrics
 
 # Optimization parameters
 optimization:
@@ -43,14 +43,14 @@ optimization:
     
   local_search:
     max_neighbors: 30            # Maximum neighbors to explore per iteration
-    restart_threshold: 100       # Iterations before restart
+    restart_threshold: 150       # Iterations before restart
 
 # Class configuration
 class_config:
   target_classes: 5
-  min_class_size: 30
-  max_class_size: 40
-  preferred_class_size: 33
+  min_class_size: 35
+  max_class_size: 41
+  preferred_class_size: 37
   allow_uneven_classes: true
 
 # Normalization factors
@@ -58,7 +58,7 @@ normalization:
   academic_score_factor: 2.0
   behavior_rank_factor: 35.0
   studentiality_rank_factor: 35.0
-  class_size_factor: 5.0
+  class_size_factor: 7.0
   assistance_count_factor: 10.0
 
 # Validation rules
